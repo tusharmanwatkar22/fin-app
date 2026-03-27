@@ -57,7 +57,9 @@ const DashboardScreen = ({ navigation }) => {
   // Soft aesthetic palette
   const pieColors = ["#8b5cf6", "#ec4899", "#3b82f6", "#10b981", "#f59e0b"];
   const aggExp = expenses.reduce((acc, curr) => {
-    acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
+    const rawCat = curr.category || 'Unknown';
+    const normalizedCat = rawCat.trim().charAt(0).toUpperCase() + rawCat.trim().slice(1).toLowerCase();
+    acc[normalizedCat] = (acc[normalizedCat] || 0) + curr.amount;
     return acc;
   }, {});
   
@@ -77,7 +79,6 @@ const DashboardScreen = ({ navigation }) => {
     >
       <View style={styles.headerRow}>
         <View>
-          <Text style={styles.greeting}>Good Morning,</Text>
           <Text style={styles.header}>{userProfile?.name || 'User'}</Text>
         </View>
         <TouchableOpacity style={styles.avatar} onPress={() => navigation.navigate('Profile')}>
@@ -94,14 +95,14 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.row}>
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-              <Ionicons name="arrow-down-circle" size={16} color="#34d399" />
+              <Ionicons name="trending-up" size={16} color="#34d399" />
               <Text style={styles.subtext}> Income</Text>
             </View>
             <Text style={styles.income}>₹{(summary ? summary.total_income : 0).toLocaleString()}</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-              <Ionicons name="arrow-up-circle" size={16} color="#f87171" />
+              <Ionicons name="trending-down" size={16} color="#f87171" />
               <Text style={styles.subtext}> Expenses</Text>
             </View>
             <Text style={styles.expense}>₹{(summary ? summary.total_expense : 0).toLocaleString()}</Text>
@@ -111,7 +112,7 @@ const DashboardScreen = ({ navigation }) => {
 
       {pieData.length > 0 && (
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Analytics</Text>
+          <Text style={styles.sectionTitle}>Expenses</Text>
           <Card style={{ paddingLeft: 0, paddingRight: 0 }}>
             <ExpensePieChart data={pieData} />
           </Card>
@@ -121,7 +122,9 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
            <Text style={styles.sectionTitle}>Recent Transactions</Text>
-           <Text style={styles.seeAll}>See All</Text>
+           <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
+             <Text style={styles.seeAll}>See All</Text>
+           </TouchableOpacity>
         </View>
         <Card>
           {recentTransactions.slice(0, 5).map(item => (

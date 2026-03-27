@@ -20,7 +20,7 @@ const ExpenseItem = ({ category, amount, date, mode, type = 'expense' }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.iconContainer, { backgroundColor: isIncome ? '#e8f5e9' : theme.bg }]}>
-        <Ionicons name={isIncome ? 'arrow-down' : theme.icon} size={20} color={isIncome ? '#10b981' : theme.color} />
+        <Ionicons name={isIncome ? 'trending-up' : theme.icon} size={20} color={isIncome ? '#10b981' : theme.color} />
       </View>
       <View style={styles.details}>
         <Text style={styles.category}>{category}</Text>

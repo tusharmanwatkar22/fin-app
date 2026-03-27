@@ -68,10 +68,10 @@ const TransactionsScreen = ({ navigation }) => {
       
       <View style={styles.fabContainer}>
         <TouchableOpacity style={[styles.fab, styles.fabExpense]} onPress={() => navigation.navigate('ExpenseScreen')}>
-          <Ionicons name="arrow-down" size={26} color="#fff" />
+          <Ionicons name="trending-down" size={26} color="#fff" />
         </TouchableOpacity>
         <TouchableOpacity style={[styles.fab, styles.fabIncome]} onPress={() => navigation.navigate('IncomeScreen')}>
-          <Ionicons name="arrow-up" size={26} color="#fff" />
+          <Ionicons name="trending-up" size={26} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>
