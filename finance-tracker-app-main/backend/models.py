@@ -37,6 +37,7 @@ class Income(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"))
     amount = Column(Float)
     source = Column(String)
+    payment_mode = Column(String, default="Bank")
     date = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="incomes")

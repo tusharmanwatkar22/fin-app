@@ -1,6 +1,25 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const API_BASE_URL = 'http://10.25.154.23:8000'; // Updated to your PC's local IP
+const getBackendUrl = () => {
+  // Attempt to get the IP address from Expo's Metro Bundler host
+  const hostUri = Constants?.expoConfig?.hostUri || Constants?.manifest?.hostUri || Constants?.manifest2?.extra?.expoGo?.debuggerHost;
+  
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    return `http://${ip}:8000`; // Assuming your backend runs on port 8000
+  }
+  
+  // Fallbacks for simulators/emulators
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:8000'; // Android emulator localhost alias
+  }
+  return 'http://localhost:8000'; // iOS simulator or web
+};
+
+const API_BASE_URL = getBackendUrl();
+console.log("🚀 ~ API_BASE_URL resolved as:", API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,

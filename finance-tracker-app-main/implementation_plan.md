@@ -1,4 +1,3 @@
-
 ## Goal Description
 The goal is to complete the mobile-friendly Personal Finance Management & Tracking System with React Native (Expo) and Python FastAPI. The primary remaining works include:
 1. Creating the missing frontend screens ([Income](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/backend/models.py#33-43), `Goals`, `Reports`, `Profile`).
@@ -40,6 +39,11 @@ The goal is to complete the mobile-friendly Personal Finance Management & Tracki
 
 #### [NEW] [ProfileScreen.js](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/ProfileScreen.js)
 - Create and update profile, select a budget rule (50-30-20, etc).
+
+#### [MODIFY] [ExpenseScreen.js](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/ExpenseScreen.js)
+- Replace the simple Category text input with a dedicated multi-column grid view of categories.
+- Define a list of categories with emojis (e.g., 💡 Bills & Utilities, 🍽️ Food & Drinks, etc.) to match the desired premium layout.
+- Update the state and styling to highlight the selected category card.
 
 #### [MODIFY] [DashboardScreen.js](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/DashboardScreen.js)
 - Ensure dynamic fetching from `/summary`. Handle basic layout with placeholder charts. 

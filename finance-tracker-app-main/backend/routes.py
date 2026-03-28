@@ -32,6 +32,7 @@ def get_profile(user_id: int, db: Session = Depends(get_db)):
 def update_profile(user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     update_data = user_update.dict(exclude_unset=True)
+    update_data = {k: (None if v == "" else v) for k, v in update_data.items()}
     if not user:
         user = models.User(user_id=user_id, **update_data)
         db.add(user)
@@ -105,10 +106,22 @@ def get_budget_rules(db: Session = Depends(get_db)):
             models.BudgetRule(rule_name="40-40-20", needs_percentage=40, wants_percentage=40, savings_percentage=20),
             models.BudgetRule(rule_name="70-20-10", needs_percentage=70, wants_percentage=20, savings_percentage=10),
             models.BudgetRule(rule_name="60-20-20", needs_percentage=60, wants_percentage=20, savings_percentage=20),
+            models.BudgetRule(rule_name="60-40", needs_percentage=60, wants_percentage=40, savings_percentage=0),
         ]
         db.bulk_save_objects(default_rules)
         db.commit()
         rules = db.query(models.BudgetRule).all()
+    else:
+        existing_names = [r.rule_name for r in rules]
+        new_rules = []
+        if "70-20-10" not in existing_names:
+            new_rules.append(models.BudgetRule(rule_name="70-20-10", needs_percentage=70, wants_percentage=20, savings_percentage=10))
+        if "60-40" not in existing_names:
+            new_rules.append(models.BudgetRule(rule_name="60-40", needs_percentage=60, wants_percentage=40, savings_percentage=0))
+        if new_rules:
+            db.bulk_save_objects(new_rules)
+            db.commit()
+            rules = db.query(models.BudgetRule).all()
     return success([schemas.BudgetRuleResponse.from_orm(r).dict() for r in rules])
 
 @router.post("/budget/select")

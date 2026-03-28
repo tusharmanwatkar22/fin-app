@@ -92,9 +92,10 @@ const ExpenseScreen = ({ navigation }) => {
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Payment Mode</Text>
           <View style={styles.row}>
-            {['Cash', 'Card', 'UPI'].map(m => (
-              <TouchableOpacity key={m} style={[styles.modeBtn, mode === m && styles.modeBtnActive]} onPress={() => setMode(m)}>
-                <Text style={[styles.modeText, mode === m && styles.modeTextActive]}>{m}</Text>
+            {[{name: 'Cash', icon: 'cash'}, {name: 'Card', icon: 'card'}, {name: 'UPI', icon: 'qr-code'}].map(m => (
+              <TouchableOpacity key={m.name} style={[styles.modeBtn, mode === m.name && styles.modeBtnActive]} onPress={() => setMode(m.name)}>
+                <Ionicons name={m.icon} size={18} color={mode === m.name ? '#ffffff' : '#6b7280'} style={{marginBottom: 4}} />
+                <Text style={[styles.modeText, mode === m.name && styles.modeTextActive]}>{m.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
