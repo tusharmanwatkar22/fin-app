@@ -1,6 +1,30 @@
 import axios from 'axios';
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const API_BASE_URL = 'http://10.25.154.23:8000'; // Updated to your PC's local IP
+const getBackendUrl = () => {
+  // 1. Web browser fallback
+  if (Platform.OS === 'web') return 'http://localhost:8000';
+
+  // 2. Discover local Wi-Fi IP automatically from Expo Go 
+  const hostUri = Constants.expoConfig?.hostUri || Constants.manifest?.debuggerHost || Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  
+  if (hostUri) {
+    const ip = hostUri.split(':')[0];
+    return `http://${ip}:8000`;
+  }
+
+  // 3. Android Emulator fallback
+  if (Platform.OS === 'android') return 'http://10.0.2.2:8000';
+
+  // 4. Default failsafe fallback
+  return 'http://10.71.173.166:8000';
+};
+
+const API_BASE_URL = getBackendUrl();
+console.log('====================================');
+console.log('USING API_BASE_URL:', API_BASE_URL);
+console.log('====================================');
 
 const api = axios.create({
   baseURL: API_BASE_URL,
