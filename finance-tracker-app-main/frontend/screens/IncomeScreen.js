@@ -6,11 +6,12 @@ import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
 
 const INCOME_CATEGORIES = [
-  { name: 'Salary', icon: 'cash', color: '#10b981' },
-  { name: 'Freelance', icon: 'laptop', color: '#3b82f6' },
-  { name: 'Investments', icon: 'trending-up', color: '#8b5cf6' },
-  { name: 'Gifts', icon: 'gift', color: '#ec4899' },
-  { name: 'Other', icon: 'ellipsis-horizontal-circle', color: '#6b7280' }
+  { id: 'salary', name: 'Salary', icon: '💰' },
+  { id: 'freelance', name: 'Freelance', icon: '💻' },
+  { id: 'investments', name: 'Investments', icon: '📈' },
+  { id: 'business', name: 'Business', icon: '🏢' },
+  { id: 'gifts', name: 'Gifts', icon: '🎁' },
+  { id: 'other', name: 'Other', icon: '💵' }
 ];
 
 export default function IncomeScreen({ navigation }) {
@@ -49,21 +50,21 @@ export default function IncomeScreen({ navigation }) {
       <View style={styles.formCard}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Source</Text>
-          <View style={styles.categoriesContainer}>
+          <View style={styles.categoryGrid}>
             {INCOME_CATEGORIES.map(cat => (
               <TouchableOpacity
-                key={cat.name}
+                key={cat.id}
                 style={[
-                  styles.categoryBox,
-                  source === cat.name && { borderColor: cat.color, backgroundColor: `${cat.color}15` }
+                  styles.categoryCard,
+                  source === cat.name && styles.categoryCardActive
                 ]}
                 onPress={() => setSource(cat.name)}
               >
-                <Ionicons name={cat.icon} size={28} color={source === cat.name ? cat.color : '#9ca3af'} />
+                <Text style={styles.categoryIcon}>{cat.icon}</Text>
                 <Text style={[
                   styles.categoryText,
-                  source === cat.name && { color: cat.color, fontWeight: '700' }
-                ]}>{cat.name}</Text>
+                  source === cat.name && styles.categoryTextActive
+                ]} adjustsFontSizeToFit numberOfLines={2}>{cat.name}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -123,29 +124,12 @@ const styles = StyleSheet.create({
   },
   inputGroup: { marginBottom: 20 },
   label: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
-  categoriesContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'space-between'
-  },
-  categoryBox: {
-    width: '30%',
-    alignItems: 'center',
-    padding: 12,
-    borderWidth: 2,
-    borderColor: '#f3f4f6',
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    marginBottom: 4
-  },
-  categoryText: {
-    marginTop: 8,
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
-    textAlign: 'center'
-  },
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  categoryCard: { width: '31.5%', backgroundColor: '#f3f4f6', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
+  categoryCardActive: { backgroundColor: '#e0e7ff', borderColor: '#4f46e5' },
+  categoryIcon: { fontSize: 28, marginBottom: 8 },
+  categoryText: { fontSize: 11, color: '#6b7280', fontWeight: '600', textAlign: 'center' },
+  categoryTextActive: { color: '#4f46e5', fontWeight: '800' },
   input: { 
     backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, 
     borderRadius: 14, fontSize: 16, fontWeight: '500' 

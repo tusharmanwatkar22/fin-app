@@ -32,7 +32,6 @@ function MainTabs() {
           else if (route.name === 'Budget') iconName = focused ? 'pie-chart' : 'pie-chart-outline';
           else if (route.name === 'Goals') iconName = focused ? 'star' : 'star-outline';
           else if (route.name === 'Reports') iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-          else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
           
           return <Ionicons name={iconName} size={size} color={color} />;
         }
@@ -43,7 +42,6 @@ function MainTabs() {
       <Tab.Screen name="Budget" component={BudgetScreen} />
       <Tab.Screen name="Goals" component={GoalsScreen} />
       <Tab.Screen name="Reports" component={ReportsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
@@ -55,6 +53,7 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="MainTabs" component={MainTabs} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="ExpenseScreen" component={ExpenseScreen} options={{ presentation: 'modal' }} />
             <Stack.Screen name="IncomeScreen" component={IncomeScreen} options={{ presentation: 'modal' }} />
           </Stack.Navigator>
