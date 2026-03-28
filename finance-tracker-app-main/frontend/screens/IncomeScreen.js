@@ -18,6 +18,7 @@ export default function IncomeScreen({ navigation }) {
   const { userId } = useAuth();
   const [amount, setAmount] = useState('');
   const [source, setSource] = useState('Salary');
+  const [mode, setMode] = useState('Bank');
 
   const handleAddIncome = async () => {
     if (!amount || !source) {
@@ -27,7 +28,8 @@ export default function IncomeScreen({ navigation }) {
     try {
       const res = await api.post(`/income/add?user_id=${userId}`, {
         amount: parseFloat(amount),
-        source: source
+        source: source,
+        payment_mode: mode
       });
       if (res.data.success) {
         setAmount('');
@@ -87,6 +89,18 @@ export default function IncomeScreen({ navigation }) {
           />
         </View>
 
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Payment Mode</Text>
+          <View style={styles.row}>
+            {[{name: 'Bank', icon: 'business'}, {name: 'Cash', icon: 'cash'}, {name: 'Card', icon: 'card'}, {name: 'UPI', icon: 'qr-code'}].map(m => (
+              <TouchableOpacity key={m.name} style={[styles.modeBtn, mode === m.name && styles.modeBtnActive]} onPress={() => setMode(m.name)}>
+                <Ionicons name={m.icon} size={18} color={mode === m.name ? '#ffffff' : '#6b7280'} style={{marginBottom: 4}} />
+                <Text style={[styles.modeText, mode === m.name && styles.modeTextActive]}>{m.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         <TouchableOpacity style={styles.saveBtn} onPress={handleAddIncome}>
           <Ionicons name="checkmark-circle" size={20} color="#fff" style={{marginRight: 8}} />
           <Text style={styles.saveBtnText}>Save Income</Text>
@@ -126,6 +140,11 @@ const styles = StyleSheet.create({
     alignItems: 'center', marginTop: 8, flexDirection: 'row', justifyContent: 'center' 
   },
   saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
+  modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center' },
+  modeBtnActive: { backgroundColor: '#10b981' },
+  modeText: { color: '#6b7280', fontWeight: '600', fontSize: 13 },
+  modeTextActive: { color: '#ffffff', fontWeight: '700' },
   
   cancelBtn: { 
     backgroundColor: '#f3f4f6', paddingVertical: 16, borderRadius: 14, 

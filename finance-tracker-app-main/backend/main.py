@@ -38,3 +38,7 @@ app.include_router(routes.router)
 @app.get("/")
 def root():
     return {"message": "Welcome to Personal Finance Management System Backend"}
+
+if __name__ == "__main__":
+    import uvicorn # type: ignore
+    uvicorn.run(app, host="0.0.0.0", port=8000)

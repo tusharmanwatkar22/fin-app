@@ -31,7 +31,7 @@ const DashboardScreen = ({ navigation }) => {
         allTxs = [...allTxs, ...resExp.data.data.map(e => ({ ...e, type: 'expense', id: `exp_${e.expense_id}` }))];
       }
       if (resInc.data && resInc.data.success) {
-        allTxs = [...allTxs, ...resInc.data.data.map(i => ({ ...i, type: 'income', category: i.source, payment_mode: 'Bank', id: `inc_${i.income_id}` }))];
+        allTxs = [...allTxs, ...resInc.data.data.map(i => ({ ...i, type: 'income', category: i.source, payment_mode: i.payment_mode || 'Bank', id: `inc_${i.income_id}` }))];
       }
       
       setRecentTransactions(allTxs.sort((a, b) => new Date(b.date) - new Date(a.date)));

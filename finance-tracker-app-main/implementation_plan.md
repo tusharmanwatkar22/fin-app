@@ -1,4 +1,3 @@
-
 ## Goal Description
 The goal is to complete the mobile-friendly Personal Finance Management & Tracking System with React Native (Expo) and Python FastAPI. The primary remaining works include:
 1. Creating the missing frontend screens ([Income](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/backend/models.py#33-43), `Goals`, `Reports`, `Profile`).

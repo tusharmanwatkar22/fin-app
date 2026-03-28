@@ -43,6 +43,7 @@ class UserResponse(UserBase):
 class IncomeBase(BaseModel):
     amount: float
     source: str
+    payment_mode: Optional[str] = "Bank"
 
 class IncomeCreate(IncomeBase):
     pass

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import BudgetBar from '../components/BudgetBar';
@@ -9,6 +9,7 @@ import api from '../services/api';
 const BudgetScreen = () => {
   const { userId } = useAuth();
   const [data, setData] = useState({ income: 0, expenses: 0, rule: null });
+  const [rules, setRules] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchBudget = async () => {
@@ -22,6 +23,7 @@ const BudgetScreen = () => {
         
         const rulesRes = await api.get('/budget-rules');
         if (rulesRes.data.success) {
+          setRules(rulesRes.data.data);
           const ruleFound = rulesRes.data.data.find(r => r.rule_id === ruleId);
           if (ruleFound) activeRule = ruleFound;
         }
@@ -43,6 +45,17 @@ const BudgetScreen = () => {
     setRefreshing(false);
   };
 
+  const handleSelectRule = async (rule_id) => {
+    try {
+      const res = await api.post(`/budget/select?user_id=${userId}&rule_id=${rule_id}`);
+      if (res.data.success) {
+        fetchBudget();
+      }
+    } catch(e) {
+      console.log(e);
+    }
+  };
+
   if (!data.rule) return <View style={styles.container}><Text style={{marginTop: 60, textAlign: 'center'}}>Loading...</Text></View>;
 
   const inc = data.income;
@@ -61,6 +74,7 @@ const BudgetScreen = () => {
     <ScrollView 
         style={styles.container}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={{ paddingBottom: 40 }}
     >
       <Text style={styles.header}>Monthly Budgets</Text>
       
@@ -87,6 +101,26 @@ const BudgetScreen = () => {
            <Text style={styles.warning}>You have exceeded your budget for Needs!</Text>
         </View>
       )}
+
+      <Text style={styles.sectionTitle}>Change Budget Rule</Text>
+      {rules.map(r => {
+        const isActive = data.rule.rule_id === r.rule_id;
+        return (
+          <TouchableOpacity 
+            key={r.rule_id} 
+            style={[styles.ruleCard, isActive && styles.activeRuleCard]} 
+            onPress={() => handleSelectRule(r.rule_id)}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[styles.ruleCardTitle, isActive && styles.activeRuleCardTitle]}>{r.rule_name}</Text>
+              {isActive && <Ionicons name="checkmark-circle" size={24} color="#4f46e5" />}
+            </View>
+            <Text style={[styles.ruleCardDesc, isActive && styles.activeRuleCardDesc]}>
+              Needs {r.needs_percentage}% | Wants {r.wants_percentage}% | Savings {r.savings_percentage}%
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
     </ScrollView>
   );
 };
@@ -97,7 +131,14 @@ const styles = StyleSheet.create({
   ruleBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e0e7ff', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
   subtitle: { fontSize: 14, color: '#4338ca', fontWeight: '600' },
   warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 16, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: '#fecaca' },
-  warning: { color: '#b91c1c', fontSize: 14, fontWeight: '700', flex: 1 }
+  warning: { color: '#b91c1c', fontSize: 14, fontWeight: '700', flex: 1 },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 30, marginBottom: 12 },
+  ruleCard: { backgroundColor: '#ffffff', padding: 16, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: '#e5e7eb', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+  activeRuleCard: { borderColor: '#4f46e5', backgroundColor: '#e0e7ff', borderWidth: 2 },
+  ruleCardTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 4 },
+  activeRuleCardTitle: { color: '#4338ca' },
+  ruleCardDesc: { fontSize: 14, color: '#6b7280', fontWeight: '500' },
+  activeRuleCardDesc: { color: '#4f46e5' }
 });
 
 export default BudgetScreen;

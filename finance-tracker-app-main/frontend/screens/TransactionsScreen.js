@@ -22,7 +22,7 @@ const TransactionsScreen = ({ navigation }) => {
         allTxs = [...allTxs, ...expRes.data.data.map(e => ({ ...e, type: 'expense', id: `exp_${e.expense_id}` }))];
       }
       if (incRes.data && incRes.data.success) {
-        allTxs = [...allTxs, ...incRes.data.data.map(i => ({ ...i, type: 'income', category: i.source, payment_mode: 'Bank', id: `inc_${i.income_id}` }))];
+        allTxs = [...allTxs, ...incRes.data.data.map(i => ({ ...i, type: 'income', category: i.source, payment_mode: i.payment_mode || 'Bank', id: `inc_${i.income_id}` }))];
       }
       
       const sorted = allTxs.sort((a, b) => new Date(b.date) - new Date(a.date));
