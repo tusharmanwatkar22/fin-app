@@ -7,6 +7,24 @@ import { initiateUPIPayment } from '../services/upiService';
 import { extractUpiFromQR } from '../services/scannerService';
 import api from '../services/api';
 
+const EXPENSE_CATEGORIES = [
+  { id: 'bills', name: 'Bills & Utilities', icon: '💡' },
+  { id: 'education', name: 'Education', icon: '📚' },
+  { id: 'entertainment', name: 'Entertainment', icon: '🎬' },
+  { id: 'food', name: 'Food & Drinks', icon: '🍽️' },
+  { id: 'gifts', name: 'Gifts & Donations', icon: '🎁' },
+  { id: 'groceries', name: 'Groceries', icon: '🛒' },
+  { id: 'healthcare', name: 'Healthcare', icon: '🏥' },
+  { id: 'housing', name: 'Housing', icon: '🏠' },
+  { id: 'insurance', name: 'Insurance', icon: '🛡️' },
+  { id: 'other', name: 'Other Expenses', icon: '💸' },
+  { id: 'personal', name: 'Personal Care', icon: '💅' },
+  { id: 'shopping', name: 'Shopping', icon: '🛍️' },
+  { id: 'subscriptions', name: 'Subscriptions', icon: '🔄' },
+  { id: 'transportation', name: 'Transportation', icon: '🚗' },
+  { id: 'travel', name: 'Travel', icon: '✈️' },
+];
+
 const ExpenseScreen = ({ navigation }) => {
   const { userId } = useAuth();
   
@@ -85,8 +103,21 @@ const ExpenseScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Category</Text>
-          <TextInput style={styles.input} value={category} onChangeText={setCategory} placeholder="Food, Rent, etc." placeholderTextColor="#9ca3af" />
+          <Text style={styles.label}>Category *</Text>
+          <View style={styles.categoryGrid}>
+            {EXPENSE_CATEGORIES.map((cat) => (
+              <TouchableOpacity
+                key={cat.id}
+                style={[styles.categoryCard, category === cat.name && styles.categoryCardActive]}
+                onPress={() => setCategory(cat.name)}
+              >
+                <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                <Text style={[styles.categoryText, category === cat.name && styles.categoryTextActive]} adjustsFontSizeToFit numberOfLines={2}>
+                  {cat.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.inputGroup}>
@@ -140,6 +171,13 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
   input: { backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500' },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
+  
+  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+  categoryCard: { width: '31.5%', backgroundColor: '#f3f4f6', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
+  categoryCardActive: { backgroundColor: '#e0e7ff', borderColor: '#4f46e5' },
+  categoryIcon: { fontSize: 28, marginBottom: 8 },
+  categoryText: { fontSize: 11, color: '#6b7280', fontWeight: '600', textAlign: 'center' },
+  categoryTextActive: { color: '#4f46e5', fontWeight: '800' },
   
   modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: '#4f46e5' },
