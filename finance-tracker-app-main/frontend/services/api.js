@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://10.25.154.23:8000'; // Updated to your PC's local IP
+const API_BASE_URL = 'http://10.71.173.238:8000'; // Updated to your PC's local IP
 
 const api = axios.create({
   baseURL: API_BASE_URL,
