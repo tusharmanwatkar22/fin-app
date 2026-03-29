@@ -5,8 +5,9 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   // In a real app, this state would map to a database `id` or JWT after login.
-  // For the current single-user implementation, we default it to dummy user 1 safely.
-  const [userId, setUserId] = useState(1);
+  // For the current single-user implementation, we default it to null safely
+  // to show the Welcome screen initially.
+  const [userId, setUserId] = useState(null);
   const [userProfile, setUserProfile] = useState({ name: '', email: '' });
 
   useEffect(() => {

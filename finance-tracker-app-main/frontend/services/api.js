@@ -11,11 +11,8 @@ const getBackendUrl = () => {
     return `http://${ip}:8000`; // Assuming your backend runs on port 8000
   }
   
-  // Fallbacks for simulators/emulators
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8000'; // Android emulator localhost alias
-  }
-  return 'http://localhost:8000'; // iOS simulator or web
+  // Fallback to the host machine's local IP address for physical devices and emulators
+  return 'http://10.71.173.238:8000';
 };
 
 const API_BASE_URL = getBackendUrl();
