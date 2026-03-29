@@ -15,7 +15,8 @@ The application utilizes **React Native (Expo)** for the frontend and **Python F
    - Integrated `react-navigation` with a `BottomTabNavigator` to seamlessly route between [Dashboard](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/DashboardScreen.js#8-97), [Transactions](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/TransactionsScreen.js#10-22), [Budget](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/backend/models.py#22-32), [Goals](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/GoalsScreen.js#11-21), [Reports](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/ReportsScreen.js#6-39), and [Profile](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/ProfileScreen.js#6-37).
    - Developed the **Income Screen** to let users record their income.
    - Built out the **Goals Screen** with dynamic progress bars based on saved vs target amounts.
-   - Designed the **Reports Screen** with actual Export buttons calling the backend API to retrieve base64 documents.
+   - Designed the **Reports Screen** with actual Export buttons calling the backend API to retrieve base64 documents and saving them via `expo-file-system` and `expo-sharing`. Implemented interactive feedback elements with native mobile feel (Loading spinners, inactive opacities).
+   - Embedded standard `expo-document-picker` to extract device Excel, PDF, CSV datasets and bulk log them straight to the FastAPI backend!
    - Finalized the **Profile Screen** for user detail management.
    - Transformed the dummy **Dashboard**, **Budget**, and **Transactions** screens to dynamically fetch and display actual user finances through the backend API.
    - Enforced budget limits dynamically against current rules! Example: *Exceeding 30% of your income on 'Wants' will safely alert the user.*

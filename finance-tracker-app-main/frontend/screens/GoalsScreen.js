@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,11 @@ export default function GoalsScreen() {
   const [goals, setGoals] = useState([]);
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
+
+  // Add Money Modal states
+  const [isAddMoneyModalVisible, setIsAddMoneyModalVisible] = useState(false);
+  const [selectedGoal, setSelectedGoal] = useState(null);
+  const [addAmount, setAddAmount] = useState('');
 
   const fetchGoals = async () => {
     try {
@@ -41,6 +46,26 @@ export default function GoalsScreen() {
       }
     } catch (e) {
       Alert.alert('Error', 'API Error');
+    }
+  };
+
+  const openAddMoneyModal = (goal) => {
+    setSelectedGoal(goal);
+    setAddAmount('');
+    setIsAddMoneyModalVisible(true);
+  };
+
+  const handleAddMoneySubmit = async () => {
+    if (!addAmount || !selectedGoal) return;
+    try {
+      const res = await api.put(`/goals/${selectedGoal.goal_id}/add-money?amount=${parseFloat(addAmount)}&user_id=${userId}`);
+      if (res.data.success) {
+        setIsAddMoneyModalVisible(false);
+        fetchGoals();
+        Alert.alert('Success', `Added ₹${addAmount} to ${selectedGoal.goal_name}`);
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Could not add money to your goal.');
     }
   };
 
@@ -82,7 +107,16 @@ export default function GoalsScreen() {
             <View style={styles.goalCard}>
               <View style={styles.goalHeaderRow}>
                 <Text style={styles.goalTitle}>{item.goal_name}</Text>
-                <Text style={styles.goalPercentage}>{progress.toFixed(0)}%</Text>
+                <View style={styles.headerRight}>
+                  <Text style={styles.goalPercentage}>{progress.toFixed(0)}%</Text>
+                  {progress >= 100 ? (
+                    <Ionicons name="checkmark-circle" size={24} color="#10b981" style={{ padding: 4 }} />
+                  ) : (
+                    <TouchableOpacity style={styles.addMoneyBtnIcon} onPress={() => openAddMoneyModal(item)}>
+                      <Ionicons name="add-circle" size={24} color="#6366f1" />
+                    </TouchableOpacity>
+                  )}
+                </View>
               </View>
               <Text style={styles.goalSubtext}>₹{item.saved_amount.toLocaleString()} saved of ₹{item.target_amount.toLocaleString()}</Text>
               <View style={styles.progressBar}>
@@ -92,6 +126,39 @@ export default function GoalsScreen() {
           );
         }}
       />
+
+      {/* Add Money Modal */}
+      <Modal visible={isAddMoneyModalVisible} animationType="fade" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Money</Text>
+              <TouchableOpacity onPress={() => setIsAddMoneyModalVisible(false)}>
+                <Ionicons name="close" size={28} color="#333" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>Goal: {selectedGoal?.goal_name}</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Amount to Add (₹)</Text>
+              <TextInput 
+                style={styles.modalInput} 
+                placeholder="0" 
+                placeholderTextColor="#9ca3af"
+                value={addAmount} 
+                onChangeText={setAddAmount} 
+                keyboardType="numeric" 
+                autoFocus={true}
+              />
+            </View>
+
+            <TouchableOpacity style={styles.submitModalBtn} onPress={handleAddMoneySubmit}>
+              <Text style={styles.submitModalBtnText}>Update Goal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -120,8 +187,21 @@ const styles = StyleSheet.create({
   },
   goalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   goalTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
-  goalPercentage: { fontSize: 16, fontWeight: '800', color: '#6366f1' },
+  headerRight: { flexDirection: 'row', alignItems: 'center' },
+  goalPercentage: { fontSize: 16, fontWeight: '800', color: '#6366f1', marginRight: 8 },
+  addMoneyBtnIcon: { padding: 4 },
   goalSubtext: { fontSize: 14, color: '#6b7280', marginBottom: 16, fontWeight: '500' },
   progressBar: { height: 10, backgroundColor: '#e5e7eb', borderRadius: 5, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#6366f1', borderRadius: 5 }
+  progressFill: { height: '100%', backgroundColor: '#6366f1', borderRadius: 5 },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  modalTitle: { fontSize: 22, fontWeight: '700', color: '#1f2937' },
+  modalSubtitle: { fontSize: 16, color: '#6b7280', marginBottom: 20 },
+  inputGroup: { marginBottom: 24 },
+  inputLabel: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
+  modalInput: { backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500' },
+  submitModalBtn: { backgroundColor: '#6366f1', paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
+  submitModalBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
 });
