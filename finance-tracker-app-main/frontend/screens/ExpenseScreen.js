@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
@@ -93,8 +93,9 @@ const ExpenseScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 60 }}>
-      <Text style={styles.header}>Add Expense</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+        <Text style={styles.header}>Add Expense</Text>
       
       <View style={styles.formCard}>
         <View style={styles.inputGroup}>
@@ -154,14 +155,15 @@ const ExpenseScreen = ({ navigation }) => {
           <Text style={styles.cancelBtnText}>Cancel</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 60, marginBottom: 24 },
+  header: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 20, marginBottom: 24 },
   
   formCard: { 
     backgroundColor: '#ffffff', padding: 24, borderRadius: 24, 
@@ -175,13 +177,13 @@ const styles = StyleSheet.create({
   
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   categoryCard: { width: '31.5%', backgroundColor: '#f3f4f6', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
-  categoryCardActive: { backgroundColor: '#e0e7ff', borderColor: '#4f46e5' },
+  categoryCardActive: { backgroundColor: '#fef2f2', borderColor: '#f43f5e' },
   categoryIcon: { fontSize: 28, marginBottom: 8 },
   categoryText: { fontSize: 11, color: '#6b7280', fontWeight: '600', textAlign: 'center' },
-  categoryTextActive: { color: '#4f46e5', fontWeight: '800' },
+  categoryTextActive: { color: '#f43f5e', fontWeight: '800' },
   
   modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: '#4f46e5' },
+  modeBtnActive: { backgroundColor: '#f43f5e' },
   modeText: { color: '#6b7280', fontWeight: '600', fontSize: 15 },
   modeTextActive: { color: '#ffffff', fontWeight: '700' },
   

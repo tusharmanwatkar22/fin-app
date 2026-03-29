@@ -20,15 +20,17 @@ const ExpenseItem = ({ category, amount, date, mode, type = 'expense' }) => {
   return (
     <View style={styles.container}>
       <View style={[styles.iconContainer, { backgroundColor: isIncome ? '#e8f5e9' : theme.bg }]}>
-        <Ionicons name={isIncome ? 'trending-up' : theme.icon} size={20} color={isIncome ? '#10b981' : theme.color} />
+        <Ionicons name={isIncome ? 'trending-up' : theme.icon} size={22} color={isIncome ? '#10b981' : theme.color} />
       </View>
       <View style={styles.details}>
         <Text style={styles.category}>{category}</Text>
         <Text style={styles.dateMode}>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {mode}</Text>
       </View>
-      <Text style={[styles.amount, { color: isIncome ? '#10b981' : '#1f2937' }]}>
-        {isIncome ? '+' : '-'}₹{amount.toLocaleString()}
-      </Text>
+      <View style={styles.rightSection}>
+        <Text style={[styles.amount, { color: isIncome ? '#10b981' : '#f43f5e' }]}>
+          {isIncome ? '+' : '-'}₹{amount.toLocaleString()}
+        </Text>
+      </View>
     </View>
   );
 };
@@ -37,14 +39,20 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f4f4f5',
+    padding: 16,
+    marginBottom: 12,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -55,18 +63,20 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1f2937',
+    color: '#2d3748',
     marginBottom: 4,
   },
   dateMode: {
     fontSize: 13,
-    color: '#6b7280',
+    color: '#a0aec0',
     fontWeight: '500',
+  },
+  rightSection: {
+    alignItems: 'flex-end',
   },
   amount: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#1f2937',
   },
 });
 
