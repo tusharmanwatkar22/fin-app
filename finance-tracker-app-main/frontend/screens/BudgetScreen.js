@@ -6,38 +6,57 @@ import BudgetBar from '../components/BudgetBar';
 import Card from '../components/Card';
 import api from '../services/api';
 
-const BudgetScreen = () => {
+const BudgetScreen = ({ navigation }) => {
   const { userId } = useAuth();
   const [data, setData] = useState({ income: 0, expenses: 0, rule: null });
   const [rules, setRules] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
 
   const fetchBudget = async () => {
+    if (!userId) return;
     try {
       const summaryRes = await api.get(`/summary?user_id=${userId}`);
-      if (summaryRes.data.success) {
-        const d = summaryRes.data.data;
+      
+      let activeRule = { needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" };
+      let d = { total_income: 0, total_expense: 0 };
+
+      if (summaryRes.data && summaryRes.data.success) {
+        d = summaryRes.data.data;
         const ruleId = d.budget_rule_id;
         
-        let activeRule = { needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" };
-        
-        const rulesRes = await api.get('/budget-rules');
-        if (rulesRes.data.success) {
-          setRules(rulesRes.data.data);
-          const ruleFound = rulesRes.data.data.find(r => r.rule_id === ruleId);
-          if (ruleFound) activeRule = ruleFound;
+        try {
+          const rulesRes = await api.get('/budget-rules');
+          if (rulesRes.data && rulesRes.data.success) {
+            setRules(rulesRes.data.data);
+            const ruleFound = rulesRes.data.data.find(r => r.rule_id === ruleId);
+            if (ruleFound) activeRule = ruleFound;
+          }
+        } catch (ruleErr) {
+          console.log('Rules fetch error', ruleErr);
         }
-
-        setData({ income: d.total_income || 0, expenses: d.total_expense || 0, rule: activeRule });
       }
+
+      setNetworkError(false);
+      setData({ income: d.total_income || 0, expenses: d.total_expense || 0, rule: activeRule });
     } catch (e) {
-      console.log(e);
+      console.log('Budget fetch error', e);
+      setNetworkError(true);
+      setData({ income: 0, expenses: 0, rule: { needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" } });
     }
   };
 
   useEffect(() => {
+    if (!navigation) {
+      fetchBudget();
+      return;
+    }
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchBudget();
+    });
     fetchBudget();
-  }, []);
+    return unsubscribe;
+  }, [navigation, userId]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -48,20 +67,26 @@ const BudgetScreen = () => {
   const handleSelectRule = async (rule_id) => {
     try {
       const res = await api.post(`/budget/select?user_id=${userId}&rule_id=${rule_id}`);
-      if (res.data.success) {
+      if (res.data && res.data.success) {
         fetchBudget();
       }
     } catch(e) {
-      console.log(e);
+      console.log('Select rule error', e);
     }
   };
 
-  if (!data.rule) return <View style={styles.container}><Text style={{marginTop: 60, textAlign: 'center'}}>Loading...</Text></View>;
+  if (!data || !data.rule) {
+    return (
+      <View style={styles.container}>
+        <Text style={{marginTop: 60, textAlign: 'center'}}>Loading...</Text>
+      </View>
+    );
+  }
 
-  const inc = data.income;
-  const needsLimit = (inc * data.rule.needs_percentage) / 100;
-  const wantsLimit = (inc * data.rule.wants_percentage) / 100;
-  const savingsLimit = (inc * data.rule.savings_percentage) / 100;
+  const inc = data.income || 0;
+  const needsLimit = (inc * (data.rule.needs_percentage || 50)) / 100;
+  const wantsLimit = (inc * (data.rule.wants_percentage || 30)) / 100;
+  const savingsLimit = (inc * (data.rule.savings_percentage || 20)) / 100;
 
   const needsSpent = data.expenses * 0.6; // Mock distribution
   const wantsSpent = data.expenses * 0.4; // Mock distribution
@@ -78,6 +103,13 @@ const BudgetScreen = () => {
     >
       <Text style={styles.header}>Monthly Budgets</Text>
       
+      {networkError && (
+        <View style={[styles.warningBox, { backgroundColor: '#fee2e2', borderColor: '#ef4444' }]}>
+           <Ionicons name="wifi" size={20} color="#ef4444" style={{marginRight: 8}} />
+           <Text style={styles.warning}>Backend connection failed! Please ensure your mobile device and PC are on the SAME WiFi and the backend terminal is running.</Text>
+        </View>
+      )}
+
       <View style={styles.ruleBadge}>
         <Ionicons name="shield-checkmark" size={18} color="#4f46e5" style={{marginRight: 6}} />
         <Text style={styles.subtitle}>Active Rule: <Text style={{fontWeight: '800'}}>{data.rule.rule_name}</Text></Text>

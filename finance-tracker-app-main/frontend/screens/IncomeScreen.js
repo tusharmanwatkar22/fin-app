@@ -45,71 +45,66 @@ export default function IncomeScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Add Income</Text>
-      
-      <View style={styles.formCard}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Source</Text>
-          <View style={styles.categoryGrid}>
-            {INCOME_CATEGORIES.map(cat => (
-              <TouchableOpacity
-                key={cat.id}
-                style={[
-                  styles.categoryCard,
-                  source === cat.name && styles.categoryCardActive
-                ]}
-                onPress={() => setSource(cat.name)}
-              >
-                <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                <Text style={[
-                  styles.categoryText,
-                  source === cat.name && styles.categoryTextActive
-                ]} adjustsFontSizeToFit numberOfLines={2}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TextInput 
-            style={[styles.input, { marginTop: 12 }]} 
-            placeholder="Or type custom source..." 
-            placeholderTextColor="#9ca3af"
-            value={source} 
-            onChangeText={setSource} 
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Amount</Text>
-          <TextInput 
-            style={styles.input} 
-            placeholder="0.00" 
-            placeholderTextColor="#9ca3af"
-            keyboardType="numeric" 
-            value={amount} 
-            onChangeText={setAmount} 
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Payment Mode</Text>
-          <View style={styles.row}>
-            {[{name: 'Bank', icon: 'business'}, {name: 'Cash', icon: 'cash'}, {name: 'Card', icon: 'card'}, {name: 'UPI', icon: 'qr-code'}].map(m => (
-              <TouchableOpacity key={m.name} style={[styles.modeBtn, mode === m.name && styles.modeBtnActive]} onPress={() => setMode(m.name)}>
-                <Ionicons name={m.icon} size={18} color={mode === m.name ? '#ffffff' : '#6b7280'} style={{marginBottom: 4}} />
-                <Text style={[styles.modeText, mode === m.name && styles.modeTextActive]}>{m.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.saveBtn} onPress={handleAddIncome}>
-          <Ionicons name="checkmark-circle" size={20} color="#fff" style={{marginRight: 8}} />
-          <Text style={styles.saveBtnText}>Save Income</Text>
-        </TouchableOpacity>
+      <ScrollView contentContainerStyle={{ paddingBottom: 60 }} showsVerticalScrollIndicator={false}>
+        <Text style={styles.header}>Add Income</Text>
         
-        <TouchableOpacity style={styles.cancelBtn} onPress={() => {if(navigation.goBack) navigation.goBack()}}>
-          <Text style={styles.cancelBtnText}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.formCard}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Amount</Text>
+            <TextInput 
+              style={styles.input} 
+              placeholder="0.00" 
+              placeholderTextColor="#9ca3af"
+              keyboardType="numeric" 
+              value={amount} 
+              onChangeText={setAmount} 
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Category *</Text>
+            <View style={styles.categoryGrid}>
+              {INCOME_CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={[
+                    styles.categoryCard,
+                    source === cat.name && styles.categoryCardActive
+                  ]}
+                  onPress={() => setSource(cat.name)}
+                >
+                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
+                  <Text style={[
+                    styles.categoryText,
+                    source === cat.name && styles.categoryTextActive
+                  ]} adjustsFontSizeToFit numberOfLines={2}>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Payment Mode</Text>
+            <View style={styles.row}>
+              {[{name: 'Cash', icon: 'cash'}, {name: 'Card', icon: 'card'}, {name: 'UPI', icon: 'qr-code'}].map(m => (
+                <TouchableOpacity key={m.name} style={[styles.modeBtn, mode === m.name && styles.modeBtnActive]} onPress={() => setMode(m.name)}>
+                  <Ionicons name={m.icon} size={18} color={mode === m.name ? '#ffffff' : '#6b7280'} style={{marginBottom: 4}} />
+                  <Text style={[styles.modeText, mode === m.name && styles.modeTextActive]}>{m.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.saveBtn} onPress={handleAddIncome}>
+            <Ionicons name="checkmark-circle" size={20} color="#fff" style={{marginRight: 8}} />
+            <Text style={styles.saveBtnText}>Save Income</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.cancelBtn} onPress={() => {if(navigation.goBack) navigation.goBack()}}>
+            <Text style={styles.cancelBtnText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -126,10 +121,10 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
   categoryCard: { width: '31.5%', backgroundColor: '#f3f4f6', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
-  categoryCardActive: { backgroundColor: '#e0e7ff', borderColor: '#4f46e5' },
+  categoryCardActive: { backgroundColor: '#ecfdf5', borderColor: '#10b981' },
   categoryIcon: { fontSize: 28, marginBottom: 8 },
   categoryText: { fontSize: 11, color: '#6b7280', fontWeight: '600', textAlign: 'center' },
-  categoryTextActive: { color: '#4f46e5', fontWeight: '800' },
+  categoryTextActive: { color: '#10b981', fontWeight: '800' },
   input: { 
     backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, 
     borderRadius: 14, fontSize: 16, fontWeight: '500' 
@@ -137,10 +132,10 @@ const styles = StyleSheet.create({
   
   saveBtn: { 
     backgroundColor: '#10b981', paddingVertical: 16, borderRadius: 14, 
-    alignItems: 'center', marginTop: 8, flexDirection: 'row', justifyContent: 'center' 
+    alignItems: 'center', marginTop: 12, flexDirection: 'row', justifyContent: 'center' 
   },
   saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 6 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: '#10b981' },
   modeText: { color: '#6b7280', fontWeight: '600', fontSize: 13 },

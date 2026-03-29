@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import ExpenseItem from '../components/ExpenseItem';
 import api from '../services/api';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TransactionsScreen = ({ navigation }) => {
   const { userId } = useAuth();
+  const insets = useSafeAreaInsets();
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [filterType, setFilterType] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchTransactions = async () => {
     try {
@@ -46,14 +50,82 @@ const TransactionsScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
+  const filteredTransactions = transactions.filter(t => {
+    if (filterType === 'Income' && t.type !== 'income') return false;
+    if (filterType === 'Expenses' && t.type !== 'expense') return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const cat = (t.category || '').toLowerCase();
+      if (!cat.includes(q)) return false;
+    }
+    return true;
+  });
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>All Transactions</Text>
+    <View style={[styles.container, { paddingTop: insets.top || 40 }]}>
+      {/* Header */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} hitSlop={{top:10,bottom:10,left:10,right:10}}>
+          <Ionicons name="chevron-back" size={28} color="#1f2937" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>All Transactions</Text>
+        <TouchableOpacity hitSlop={{top:10,bottom:10,left:10,right:10}}>
+          <Ionicons name="filter-outline" size={24} color="#1f2937" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tabs Row */}
+      <View style={styles.tabsRow}>
+        <View style={styles.tabButtons}>
+          <TouchableOpacity 
+            style={[styles.tabButton, filterType === 'All' && styles.tabButtonActive]}
+            onPress={() => setFilterType('All')}
+          >
+            {filterType === 'All' && <Ionicons name="git-compare" size={16} color="#4f46e5" style={{marginRight: 6}} />}
+            <Text style={[styles.tabButtonText, filterType === 'All' && styles.tabButtonTextActive]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, filterType === 'Income' && styles.tabButtonActive]}
+            onPress={() => setFilterType('Income')}
+          >
+            <Text style={[styles.tabButtonText, filterType === 'Income' && styles.tabButtonTextActive]}>Income</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tabButton, filterType === 'Expenses' && styles.tabButtonActive]}
+            onPress={() => setFilterType('Expenses')}
+          >
+            <Text style={[styles.tabButtonText, filterType === 'Expenses' && styles.tabButtonTextActive]}>Expenses</Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity style={styles.sortButton}>
+          <Ionicons name="swap-vertical" size={22} color="#1f2937" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar Row */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+          <TextInput 
+            style={styles.searchInput}
+            placeholder="Search..."
+            placeholderTextColor="#9ca3af"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          <TouchableOpacity style={styles.searchFilterBtn}>
+            <Ionicons name="options" size={18} color="#4f46e5" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* List */}
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         keyExtractor={item => item.id}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={styles.listContainer}
         renderItem={({ item }) => (
           <ExpenseItem 
             category={item.category} 
@@ -63,32 +135,150 @@ const TransactionsScreen = ({ navigation }) => {
             type={item.type}
           />
         )}
-        contentContainerStyle={{ paddingBottom: 120 }}
       />
-      
-      <View style={styles.fabContainer}>
-        <TouchableOpacity style={[styles.fab, styles.fabExpense]} onPress={() => navigation.navigate('ExpenseScreen')}>
-          <Ionicons name="trending-down" size={26} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.fab, styles.fabIncome]} onPress={() => navigation.navigate('IncomeScreen')}>
-          <Ionicons name="trending-up" size={26} color="#fff" />
-        </TouchableOpacity>
-      </View>
+
+      {/* Contextual Add Buttons */}
+      {filterType === 'Income' && (
+        <View style={styles.fabContainer}>
+          <TouchableOpacity 
+            style={[styles.fabExtended, { backgroundColor: '#10b981' }]} 
+            onPress={() => navigation.navigate('AddTransactionScreen', { type: 'income' })}
+          >
+            <Ionicons name="add" size={20} color="#FFF" style={{marginRight: 4}} />
+            <Text style={styles.fabText}>Add Income</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {filterType === 'Expenses' && (
+        <View style={styles.fabContainer}>
+          <TouchableOpacity 
+            style={[styles.fabExtended, { backgroundColor: '#f43f5e' }]} 
+            onPress={() => navigation.navigate('AddTransactionScreen', { type: 'expense' })}
+          >
+            <Ionicons name="add" size={20} color="#FFF" style={{marginRight: 4}} />
+            <Text style={styles.fabText}>Add Expense</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 20 },
-  header: { fontSize: 26, fontWeight: '800', color: '#111827', marginTop: 60, marginBottom: 20 },
-  fabContainer: { position: 'absolute', bottom: 24, right: 24, flexDirection: 'row', gap: 16 },
-  fab: { 
-    width: 60, height: 60, borderRadius: 30, 
-    justifyContent: 'center', alignItems: 'center', 
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 6 
+  container: { 
+    flex: 1, 
+    backgroundColor: '#f4f6f9' 
   },
-  fabExpense: { backgroundColor: '#f43f5e' },
-  fabIncome: { backgroundColor: '#10b981' }
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    marginBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#2d3748'
+  },
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  tabButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  tabButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: 'transparent'
+  },
+  tabButtonActive: {
+    backgroundColor: '#e6e8fc', 
+  },
+  tabButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#718096'
+  },
+  tabButtonTextActive: {
+    color: '#4f46e5' 
+  },
+  sortButton: {
+    padding: 8,
+  },
+  searchRow: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    height: 52,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1f2937',
+    height: '100%'
+  },
+  searchFilterBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#e6e8fc',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 150,
+  },
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 90,
+    alignItems: 'flex-end',
+  },
+  fabExtended: {
+    flexDirection: 'row',
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
+    elevation: 6,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700'
+  }
 });
 
 export default TransactionsScreen;
