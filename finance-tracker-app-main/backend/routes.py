@@ -144,6 +144,16 @@ def get_goals(user_id: int, db: Session = Depends(get_db)):
     goals = db.query(models.Goal).filter(models.Goal.user_id == user_id).all()
     return success([schemas.GoalResponse.from_orm(g).dict() for g in goals])
 
+@router.put("/goals/{goal_id}/add-money")
+def add_money_to_goal(goal_id: int, amount: float, user_id: int, db: Session = Depends(get_db)):
+    goal = db.query(models.Goal).filter(models.Goal.goal_id == goal_id, models.Goal.user_id == user_id).first()
+    if not goal:
+        return {"success": False, "data": {"error": "Goal not found"}}
+    
+    goal.saved_amount += amount
+    db.commit()
+    return success({"message": "Money added to goal successfully", "saved_amount": goal.saved_amount})
+
 @router.post("/transactions/add")
 def add_transaction(user_id: int, transaction: schemas.TransactionCreate, db: Session = Depends(get_db)):
     db_txn = models.Transaction(**transaction.dict(), user_id=user_id)
