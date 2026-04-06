@@ -1,41 +1,70 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as LocalAuthentication from 'expo-local-authentication';
 import api from '../services/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // In a real app, this state would map to a database `id` or JWT after login.
-  // For the current single-user implementation, we default it to null safely
-  // to show the Welcome screen initially.
   const [userId, setUserId] = useState(null);
-  const [userProfile, setUserProfile] = useState({ name: '', email: '', mobile_number: '' });
+  const [userProfile, setUserProfile] = useState({ name: '', email: '' });
 
   useEffect(() => {
-    if (userId) {
-      console.log(`🔄 Syncing profile for user ${userId}...`);
-      api.get(`/profile?user_id=${userId}`)
-        .then(res => {
-          if (res.data && res.data.success && res.data.data) {
-            setUserProfile(res.data.data);
-            console.log("✅ Profile synced successfully");
-          }
-        })
-        .catch(e => {
-          console.log('⚠️ Sync failed, keeping local state', e);
-        });
-    }
-  }, [userId]);
+    loadUser();
+  }, []);
 
-  const login = (id, profile) => {
-    setUserId(id);
-    if (profile) {
-      setUserProfile(profile);
+  const loadUser = async () => {
+    try {
+      const storedId = await AsyncStorage.getItem('user_id');
+      if (storedId) {
+        const lockState = await AsyncStorage.getItem('@app_lock_enabled');
+        if (lockState === 'true') {
+          const result = await LocalAuthentication.authenticateAsync({
+            promptMessage: 'Unlock Finance Tracker',
+            cancelLabel: 'Cancel',
+            fallbackLabel: 'Use Passcode'
+          });
+          if (!result.success) {
+            return; // Lock interface if failed
+          }
+        }
+        setUserId(Number(storedId));
+      }
+    } catch(e) {
+      console.log('Error loading user session', e);
     }
   };
 
-  const logout = () => {
-    setUserId(null);
-    setUserProfile(null);
+  useEffect(() => {
+    if (userId) {
+      api.get(`/profile?user_id=${userId}`)
+        .then(res => {
+          if (res.data && res.data.success) {
+            setUserProfile(res.data.data);
+          }
+        })
+        .catch(e => console.log('Error fetching user profile', e));
+    }
+  }, [userId]);
+
+  const login = async (id, profile) => {
+    try {
+      await AsyncStorage.setItem('user_id', String(id));
+      setUserId(id);
+      setUserProfile(profile);
+    } catch(e) {
+      console.log('Could not save login state', e);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await AsyncStorage.removeItem('user_id');
+      setUserId(null);
+      setUserProfile({ name: '', email: '' });
+    } catch(e) {
+      console.log('Error during logout', e);
+    }
   };
 
   return (

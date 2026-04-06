@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../context/ThemeContext';
 
 const getCategoryTheme = (category) => {
   const cat = category ? category.toLowerCase() : '';
@@ -14,20 +15,22 @@ const getCategoryTheme = (category) => {
 };
 
 const ExpenseItem = ({ category, amount, date, mode, type = 'expense' }) => {
+  const { theme: appTheme } = useTheme();
+  const styles = getStyles(appTheme);
   const theme = getCategoryTheme(category);
   const isIncome = type.toLowerCase() === 'income';
   
   return (
     <View style={styles.container}>
-      <View style={[styles.iconContainer, { backgroundColor: isIncome ? '#e8f5e9' : theme.bg }]}>
-        <Ionicons name={isIncome ? 'trending-up' : theme.icon} size={22} color={isIncome ? '#10b981' : theme.color} />
+      <View style={[styles.iconContainer, { backgroundColor: isIncome ? appTheme.success + '20' : theme.bg }]}>
+        <Ionicons name={isIncome ? 'trending-up' : theme.icon} size={22} color={isIncome ? appTheme.success : theme.color} />
       </View>
       <View style={styles.details}>
         <Text style={styles.category}>{category}</Text>
         <Text style={styles.dateMode}>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {mode}</Text>
       </View>
       <View style={styles.rightSection}>
-        <Text style={[styles.amount, { color: isIncome ? '#10b981' : '#f43f5e' }]}>
+        <Text style={[styles.amount, { color: isIncome ? appTheme.success : appTheme.danger }]}>
           {`${isIncome ? '+' : '-'}₹${amount.toLocaleString()}`}
         </Text>
       </View>
@@ -35,19 +38,21 @@ const ExpenseItem = ({ category, amount, date, mode, type = 'expense' }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
-    shadowColor: '#000',
+    shadowColor: theme.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: theme.border
   },
   iconContainer: {
     width: 50,
@@ -63,12 +68,12 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#2d3748',
+    color: theme.text,
     marginBottom: 4,
   },
   dateMode: {
     fontSize: 13,
-    color: '#a0aec0',
+    color: theme.textSecondary,
     fontWeight: '500',
   },
   rightSection: {

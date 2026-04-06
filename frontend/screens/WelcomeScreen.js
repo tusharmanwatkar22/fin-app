@@ -3,17 +3,17 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+
 import { useAuth } from '../context/AuthContext';
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
   const { login } = useAuth();
 
-  const handleGoogleLogin = async () => {
-    // Simulate Google Auth
-    setTimeout(() => {
-      login(1, { name: 'Google User', email: 'google_user@example.com' });
-    }, 500);
+  const handleGoogleLogin = () => {
+    // For demonstration, simulating a Google Sign In success and logging the user in.
+    // Real implementation requires Expo AuthSession and Google Cloud Console Client IDs.
+    login(1, { name: 'Demo User', email: 'user@google.com', mobile_number: '' });
   };
 
   return (
@@ -22,12 +22,12 @@ export default function WelcomeScreen() {
       style={styles.container}
     >
       <View style={styles.logoContainer}>
-        {/* Wallet Icon */}
-        <View style={styles.iconWrapper}>
-          <Ionicons name="wallet" size={60} color="#3B82F6" />
-          <View style={styles.badge} />
-        </View>
-        <Text style={styles.title}>FinTrack</Text>
+        {/* New Logo */}
+        <Image 
+          source={require('../assets/logo.png')} 
+          style={styles.logoImage} 
+          resizeMode="contain" 
+        />
       </View>
 
       <View style={styles.welcomeTextContainer}>
@@ -50,10 +50,14 @@ export default function WelcomeScreen() {
           <Text style={styles.secondaryButtonText}>Sign Up</Text>
         </TouchableOpacity>
 
-
         <TouchableOpacity style={styles.socialButton} onPress={handleGoogleLogin}>
           <Ionicons name="logo-google" size={24} color="#DB4437" style={styles.socialIcon} />
           <Text style={styles.socialButtonText}>Continue with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.socialButton, styles.facebookButton]}>
+          <Ionicons name="logo-facebook" size={24} color="#FFF" style={styles.socialIcon} />
+          <Text style={[styles.socialButtonText, {color: '#FFF'}]}>Continue with Facebook</Text>
         </TouchableOpacity>
       </View>
     </LinearGradient>
@@ -72,33 +76,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 40,
   },
-  iconWrapper: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 15,
+  logoImage: {
+    width: 320,
+    height: 200,
     marginBottom: 10,
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  badge: {
-    position: 'absolute',
-    right: 12,
-    bottom: 15,
-    backgroundColor: '#00C2FF',
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
   },
   welcomeTextContainer: {
     alignItems: 'center',
@@ -167,6 +148,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  facebookButton: {
+    backgroundColor: '#1877F2',
   },
   socialIcon: {
     position: 'absolute',

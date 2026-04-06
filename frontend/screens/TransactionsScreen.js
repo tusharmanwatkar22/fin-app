@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import ExpenseItem from '../components/ExpenseItem';
 import api from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const TransactionsScreen = ({ navigation }) => {
   const { userId } = useAuth();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const [transactions, setTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -66,11 +69,11 @@ const TransactionsScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={() => navigation.navigate('Dashboard')} hitSlop={{top:10,bottom:10,left:10,right:10}}>
-          <Ionicons name="chevron-back" size={28} color="#1f2937" />
+          <Ionicons name="chevron-back" size={28} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>All Transactions</Text>
         <TouchableOpacity hitSlop={{top:10,bottom:10,left:10,right:10}}>
-          <Ionicons name="filter-outline" size={24} color="#1f2937" />
+          <Ionicons name="filter-outline" size={24} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -98,7 +101,7 @@ const TransactionsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         <TouchableOpacity style={styles.sortButton}>
-          <Ionicons name="swap-vertical" size={22} color="#1f2937" />
+          <Ionicons name="swap-vertical" size={22} color={theme.text} />
         </TouchableOpacity>
       </View>
 
@@ -109,7 +112,7 @@ const TransactionsScreen = ({ navigation }) => {
           <TextInput 
             style={styles.searchInput}
             placeholder="Search..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -165,10 +168,10 @@ const TransactionsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: '#f4f6f9' 
+    backgroundColor: theme.background 
   },
   headerRow: {
     flexDirection: 'row',
@@ -181,7 +184,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#2d3748'
+    color: theme.text
   },
   tabsRow: {
     flexDirection: 'row',
@@ -204,15 +207,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent'
   },
   tabButtonActive: {
-    backgroundColor: '#e6e8fc', 
+    backgroundColor: theme.primary + '20', 
   },
   tabButtonText: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#718096'
+    color: theme.textSecondary
   },
   tabButtonTextActive: {
-    color: '#4f46e5' 
+    color: theme.primary 
   },
   sortButton: {
     padding: 8,
@@ -224,15 +227,17 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     paddingHorizontal: 12,
     height: 52,
-    shadowColor: '#000',
+    shadowColor: theme.cardShadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: theme.border
   },
   searchIcon: {
     marginRight: 8,
@@ -240,14 +245,14 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#1f2937',
+    color: theme.text,
     height: '100%'
   },
   searchFilterBtn: {
     width: 34,
     height: 34,
     borderRadius: 8,
-    backgroundColor: '#e6e8fc',
+    backgroundColor: theme.primary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },

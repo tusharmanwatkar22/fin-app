@@ -3,23 +3,17 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 
 export default function ProfileScreen({ navigation }) {
-  const { userId, setUserProfile, userProfile } = useAuth();
-  const [profile, setProfile] = useState(userProfile);
+  const { userId, setUserProfile, userProfile, logout } = useAuth();
+  const [profile, setProfile] = useState({ name: '', email: '', mobile_number: '' });
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-  // States for toggles
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [isAutoUpdate, setIsAutoUpdate] = useState(true);
-
-  // Sync local state when global userProfile changes
-  useEffect(() => {
-    if (userProfile) {
-      setProfile(userProfile);
-    }
-  }, [userProfile]);
+  // Theme Context
+  const { isDarkMode, toggleTheme, theme } = useTheme();
+  const styles = getStyles(theme);
 
   useEffect(() => {
     const fetchProfile = () => {
@@ -53,7 +47,7 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#333" />
+          <Ionicons name="chevron-back" size={28} color={theme.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile & Settings</Text>
         <View style={{ width: 28 }} />
@@ -87,21 +81,8 @@ export default function ProfileScreen({ navigation }) {
             <Text style={styles.settingLabel}>Dark Mode</Text>
             <Switch
               value={isDarkMode}
-              onValueChange={setIsDarkMode}
-              trackColor={{ false: '#e5e7eb', true: '#3b82f6' }}
-              thumbColor="#fff"
-            />
-          </View>
-        </View>
-
-        {/* Settings Group 2 */}
-        <View style={styles.settingsGroup}>
-          <View style={styles.settingRow}>
-            <Text style={styles.settingLabel}>Auto-update Balance</Text>
-            <Switch
-              value={isAutoUpdate}
-              onValueChange={setIsAutoUpdate}
-              trackColor={{ false: '#e5e7eb', true: '#3b82f6' }}
+              onValueChange={toggleTheme}
+              trackColor={{ false: '#e5e7eb', true: theme.primary }}
               thumbColor="#fff"
             />
           </View>
@@ -109,7 +90,10 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Settings Group 3 */}
         <View style={styles.settingsGroup}>
-          <TouchableOpacity style={[styles.settingRow, styles.borderBottom]}>
+          <TouchableOpacity 
+            style={[styles.settingRow, styles.borderBottom]}
+            onPress={() => navigation.navigate('ManageCategories')}
+          >
             <View style={styles.iconLabelRow}>
               <View style={[styles.iconBox, { backgroundColor: '#10b981' }]}>
                 <Ionicons name="checkmark" size={16} color="#fff" />
@@ -118,7 +102,10 @@ export default function ProfileScreen({ navigation }) {
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.settingRow}>
+          <TouchableOpacity 
+            style={styles.settingRow}
+            onPress={() => navigation.navigate('SecuritySync')}
+          >
             <View style={styles.iconLabelRow}>
               <View style={[styles.iconBox, { backgroundColor: '#8b5cf6' }]}>
                 <Ionicons name="sync" size={16} color="#fff" />
@@ -129,12 +116,27 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
+        {/* Logout Group */}
+        <View style={styles.settingsGroup}>
+          <TouchableOpacity 
+            style={styles.settingRow}
+            onPress={logout}
+          >
+            <View style={styles.iconLabelRow}>
+              <View style={[styles.iconBox, { backgroundColor: '#ef4444' }]}>
+                <Ionicons name="log-out-outline" size={18} color="#fff" />
+              </View>
+              <Text style={[styles.settingLabel, {color: '#ef4444'}]}>Log Out</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Footer Links */}
         <View style={styles.footerRow}>
-          <TouchableOpacity style={styles.footerBtn}>
+          <TouchableOpacity style={styles.footerBtn} onPress={() => navigation.navigate('PrivacyPolicy')}>
             <Text style={styles.footerBtnText}>Privacy Policy</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.footerBtn}>
+          <TouchableOpacity style={styles.footerBtn} onPress={() => navigation.navigate('HelpSupport')}>
             <Text style={styles.footerBtnText}>Help & Support </Text>
             <Ionicons name="chevron-forward" size={16} color="#555" />
           </TouchableOpacity>
@@ -148,7 +150,7 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Profile</Text>
               <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
-                <Ionicons name="close" size={28} color="#333" />
+                <Ionicons name="close" size={28} color={theme.text} />
               </TouchableOpacity>
             </View>
             
@@ -178,41 +180,41 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f6f9' },
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10, paddingBottom: 20 },
   backButton: { padding: 4 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1f2937' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: theme.text },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
   
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
+  card: { backgroundColor: theme.surface, borderRadius: 20, padding: 20, marginBottom: 20, shadowColor: theme.cardShadow, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 3 },
   profileRow: { flexDirection: 'row', alignItems: 'center' },
-  avatarContainer: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#3b82f6', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  avatarContainer: { width: 60, height: 60, borderRadius: 30, backgroundColor: theme.primary, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   profileInfo: { flex: 1 },
-  profileName: { fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 4 },
-  profileEmail: { fontSize: 14, color: '#6b7280' },
+  profileName: { fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 4 },
+  profileEmail: { fontSize: 14, color: theme.textSecondary },
   
-  settingsGroup: { backgroundColor: '#fff', borderRadius: 20, marginBottom: 20, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 2, paddingHorizontal: 20 },
+  settingsGroup: { backgroundColor: theme.surface, borderRadius: 20, marginBottom: 20, shadowColor: theme.cardShadow, shadowOpacity: 0.03, shadowRadius: 10, shadowOffset: { width: 0, height: 5 }, elevation: 2, paddingHorizontal: 20 },
   settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18 },
-  borderBottom: { borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
-  settingLabel: { fontSize: 16, color: '#374151', fontWeight: '500' },
+  borderBottom: { borderBottomWidth: 1, borderBottomColor: theme.border },
+  settingLabel: { fontSize: 16, color: theme.text, fontWeight: '500' },
   settingRight: { flexDirection: 'row', alignItems: 'center' },
-  settingValue: { fontSize: 16, color: '#6b7280', marginRight: 8 },
+  settingValue: { fontSize: 16, color: theme.textSecondary, marginRight: 8 },
   
   iconLabelRow: { flexDirection: 'row', alignItems: 'center' },
   iconBox: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
-  footerBtn: { flex: 1, backgroundColor: '#fff', paddingVertical: 16, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
-  footerBtnText: { fontSize: 14, color: '#4b5563', fontWeight: '600' },
+  footerBtn: { flex: 1, backgroundColor: theme.surface, paddingVertical: 16, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginHorizontal: 5, shadowColor: theme.cardShadow, shadowOpacity: 0.03, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  footerBtnText: { fontSize: 14, color: theme.text, fontWeight: '600' },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, paddingBottom: 40 },
+  modalContent: { backgroundColor: theme.surface, borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 22, fontWeight: '700', color: '#1f2937' },
+  modalTitle: { fontSize: 22, fontWeight: '700', color: theme.text },
   inputGroup: { marginBottom: 20 },
-  inputLabel: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
-  input: { backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500' },
-  saveBtn: { backgroundColor: '#3b82f6', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12, flexDirection: 'row', justifyContent: 'center' },
+  inputLabel: { fontSize: 14, color: theme.text, fontWeight: '600', marginBottom: 8 },
+  input: { backgroundColor: theme.background, color: theme.text, paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500', borderWidth: 1, borderColor: theme.border },
+  saveBtn: { backgroundColor: theme.primary, paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12, flexDirection: 'row', justifyContent: 'center' },
   saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
 });

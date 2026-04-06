@@ -2,28 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, ScrollView, Alert, SafeAreaView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useCategories } from '../context/CategoryContext';
 import api from '../services/api';
 
-const EXPENSE_CATEGORIES = [
-  { id: 'bills', name: 'Bills & Utilities', icon: '💡' },
-  { id: 'education', name: 'Education', icon: '📚' },
-  { id: 'entertainment', name: 'Entertainment', icon: '🎬' },
-  { id: 'food', name: 'Food & Drinks', icon: '🍽️' },
-  { id: 'gifts', name: 'Gifts & Donations', icon: '🎁' },
-  { id: 'groceries', name: 'Groceries', icon: '🛒' },
-  { id: 'healthcare', name: 'Healthcare', icon: '🏥' },
-  { id: 'housing', name: 'Housing', icon: '🏠' },
-  { id: 'insurance', name: 'Insurance', icon: '🛡️' },
-  { id: 'other', name: 'Other Expenses', icon: '💸' },
-  { id: 'personal', name: 'Personal Care', icon: '💅' },
-  { id: 'shopping', name: 'Shopping', icon: '🛍️' },
-  { id: 'subscriptions', name: 'Subscriptions', icon: '🔄' },
-  { id: 'transportation', name: 'Transportation', icon: '🚗' },
-  { id: 'travel', name: 'Travel', icon: '✈️' },
-];
+
 
 const ExpenseScreen = ({ navigation }) => {
   const { userId } = useAuth();
+  const { theme } = useTheme();
+  const { expenseCategories } = useCategories();
+  const styles = getStyles(theme);
   
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -55,13 +44,13 @@ const ExpenseScreen = ({ navigation }) => {
       <View style={styles.formCard}>
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Amount</Text>
-          <TextInput style={styles.input} keyboardType="numeric" value={amount} onChangeText={setAmount} placeholder="0.00" placeholderTextColor="#9ca3af" />
+          <TextInput style={styles.input} keyboardType="numeric" value={amount} onChangeText={setAmount} placeholder="0.00" placeholderTextColor={theme.textSecondary} />
         </View>
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Category *</Text>
           <View style={styles.categoryGrid}>
-            {EXPENSE_CATEGORIES.map((cat) => (
+            {expenseCategories.map((cat) => (
               <TouchableOpacity
                 key={cat.id}
                 style={[styles.categoryCard, category === cat.name && styles.categoryCardActive]}
@@ -103,39 +92,40 @@ const ExpenseScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 20 },
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background, paddingHorizontal: 20 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { fontSize: 28, fontWeight: '800', color: '#111827', marginTop: 20, marginBottom: 24 },
+  header: { fontSize: 28, fontWeight: '800', color: theme.text, marginTop: 20, marginBottom: 24 },
   
   formCard: { 
-    backgroundColor: '#ffffff', padding: 24, borderRadius: 24, 
-    shadowColor: '#f43f5e', shadowOpacity: 0.1, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6 
+    backgroundColor: theme.surface, padding: 24, borderRadius: 24, 
+    shadowColor: theme.danger, shadowOpacity: 0.1, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 6,
+    borderWidth: 1, borderColor: theme.border
   },
   
   inputGroup: { marginBottom: 20 },
-  label: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
-  input: { backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500' },
+  label: { fontSize: 14, color: theme.text, fontWeight: '600', marginBottom: 8 },
+  input: { backgroundColor: theme.background, color: theme.text, paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500', borderWidth: 1, borderColor: theme.border },
   row: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
-  categoryCard: { width: '31.5%', backgroundColor: '#f3f4f6', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
-  categoryCardActive: { backgroundColor: '#fef2f2', borderColor: '#f43f5e' },
+  categoryCard: { width: '31.5%', backgroundColor: theme.background, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', marginBottom: 10, borderWidth: 2, borderColor: 'transparent' },
+  categoryCardActive: { backgroundColor: theme.danger + '15', borderColor: theme.danger },
   categoryIcon: { fontSize: 28, marginBottom: 8 },
-  categoryText: { fontSize: 11, color: '#6b7280', fontWeight: '600', textAlign: 'center' },
-  categoryTextActive: { color: '#f43f5e', fontWeight: '800' },
+  categoryText: { fontSize: 11, color: theme.textSecondary, fontWeight: '600', textAlign: 'center' },
+  categoryTextActive: { color: theme.danger, fontWeight: '800' },
   
-  modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: '#f3f4f6', borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: '#f43f5e' },
-  modeText: { color: '#6b7280', fontWeight: '600', fontSize: 15 },
+  modeBtn: { flex: 1, paddingVertical: 14, backgroundColor: theme.background, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: theme.border },
+  modeBtnActive: { backgroundColor: theme.danger, borderColor: theme.danger },
+  modeText: { color: theme.textSecondary, fontWeight: '600', fontSize: 15 },
   modeTextActive: { color: '#ffffff', fontWeight: '700' },
   
   
-  saveBtn: { backgroundColor: '#f43f5e', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12, flexDirection: 'row', justifyContent: 'center' },
+  saveBtn: { backgroundColor: theme.danger, paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12, flexDirection: 'row', justifyContent: 'center' },
   saveBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
   
-  cancelBtn: { backgroundColor: '#f3f4f6', paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12 },
-  cancelBtnText: { color: '#4b5563', fontSize: 16, fontWeight: '700' },
+  cancelBtn: { backgroundColor: theme.background, paddingVertical: 16, borderRadius: 14, alignItems: 'center', marginTop: 12, borderWidth: 1, borderColor: theme.border },
+  cancelBtnText: { color: theme.textSecondary, fontSize: 16, fontWeight: '700' },
 
 });
 

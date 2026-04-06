@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import ExpenseItem from '../components/ExpenseItem';
 import { ExpensePieChart } from '../components/Chart';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 
 const DashboardScreen = ({ navigation }) => {
@@ -13,6 +14,8 @@ const DashboardScreen = ({ navigation }) => {
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const { userId, userProfile } = useAuth();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
   const fetchData = async () => {
     try {
@@ -63,13 +66,16 @@ const DashboardScreen = ({ navigation }) => {
     return acc;
   }, {});
   
-  const pieData = Object.keys(aggExp).map((key, i) => ({
-    name: key,
-    amount: aggExp[key],
-    color: pieColors[i % pieColors.length],
-    legendFontColor: "#6b7280",
-    legendFontSize: 13
-  }));
+  const pieData = Object.keys(aggExp).map((key, i) => {
+    const truncatedName = key.length > 12 ? key.substring(0, 10) + '..' : key;
+    return {
+      name: truncatedName,
+      amount: aggExp[key],
+      color: pieColors[i % pieColors.length],
+      legendFontColor: theme.textSecondary,
+      legendFontSize: 12
+    };
+  });
 
   return (
     <ScrollView 
@@ -137,19 +143,19 @@ const DashboardScreen = ({ navigation }) => {
                type={item.type}
              />
           ))}
-          {recentTransactions.length === 0 && <Text style={{ color: '#9ca3af', textAlign: 'center', padding: 10 }}>No recent transactions yet.</Text>}
+          {recentTransactions.length === 0 && <Text style={{ color: theme.textSecondary, textAlign: 'center', padding: 10 }}>No recent transactions yet.</Text>}
         </Card>
       </View>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 20 },
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background, paddingHorizontal: 20 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 60, marginBottom: 24 },
-  greeting: { fontSize: 15, color: '#6b7280', marginBottom: 2 },
-  header: { fontSize: 26, fontWeight: '800', color: '#111827' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e0e7ff', justifyContent: 'center', alignItems: 'center' },
+  greeting: { fontSize: 15, color: theme.textSecondary, marginBottom: 2 },
+  header: { fontSize: 26, fontWeight: '800', color: theme.text },
+  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: theme.surface, justifyContent: 'center', alignItems: 'center' },
   
   mainCard: { 
     backgroundColor: '#1e1b4b', 
@@ -160,7 +166,9 @@ const styles = StyleSheet.create({
     shadowRadius: 20, 
     shadowOffset: { width: 0, height: 10 }, 
     elevation: 8,
-    marginBottom: 10 
+    marginBottom: 10,
+    width: '100%',
+    alignSelf: 'center'
   },
   balanceLabel: { fontSize: 15, color: '#a5b4fc', fontWeight: '500', marginBottom: 8 },
   balanceValue: { fontSize: 40, fontWeight: '900', color: '#ffffff', marginBottom: 24, letterSpacing: -1 },
@@ -170,8 +178,8 @@ const styles = StyleSheet.create({
   expense: { fontSize: 18, color: '#ffffff', fontWeight: '700' },
   
   sectionHeader: { marginTop: 24 },
-  sectionTitle: { fontSize: 19, fontWeight: '700', color: '#1f2937', marginBottom: 12 },
-  seeAll: { fontSize: 14, color: '#6366f1', fontWeight: '600' }
+  sectionTitle: { fontSize: 19, fontWeight: '700', color: theme.text, marginBottom: 12 },
+  seeAll: { fontSize: 14, color: theme.primary, fontWeight: '600' }
 });
 
 export default DashboardScreen;

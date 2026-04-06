@@ -3,8 +3,6 @@ from sqlalchemy.orm import Session # type: ignore
 from database import get_db # type: ignore
 import models, schemas # type: ignore
 import os
-import base64
-from datetime import datetime
 from utils.import_utils import extract_pdf, extract_excel, extract_docx # type: ignore
 from utils.export_utils import export_pdf, export_excel, export_csv # type: ignore
 
@@ -26,6 +24,13 @@ def create_profile(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @router.get("/profile")
 def get_profile(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        return {"success": False, "data": {"error": "User not found"}}
+    return success(schemas.UserResponse.from_orm(user).dict())
+
+@router.get("/profile/lookup")
+def lookup_profile(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
         return {"success": False, "data": {"error": "User not found"}}
     return success(schemas.UserResponse.from_orm(user).dict())
@@ -197,27 +202,15 @@ async def import_docx_route(user_id: int, file: UploadFile = File(...), db: Sess
 import base64
 
 @router.get("/export/pdf")
-def route_export_pdf(user_id: int, month: int = None, year: int = None, db: Session = Depends(get_db)):
+def route_export_pdf(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
-    income_query = db.query(models.Income).filter(models.Income.user_id == user_id)
-    expense_query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
-    
-    report_period = "Full History"
-    if month and year:
-        # Simple string-based date matching for SQLite (YYYY-MM-DD...)
-        m_str = f"{year}-{month:02d}-"
-        income_query = income_query.filter(models.Income.date.like(f"{m_str}%"))
-        expense_query = expense_query.filter(models.Expense.date.like(f"{m_str}%"))
-        report_period = datetime(year, month, 1).strftime("%B %Y")
-    
-    incomes = income_query.all()
-    expenses = expense_query.all()
+    incomes = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
     
     summary = {
         "user_name": user.name if user else "User",
         "total_income": sum(i.amount for i in incomes),
-        "total_expense": sum(e.amount for e in expenses),
-        "period": report_period
+        "total_expense": sum(e.amount for e in expenses)
     }
     
     data_list = [
@@ -229,30 +222,18 @@ def route_export_pdf(user_id: int, month: int = None, year: int = None, db: Sess
     
     pdf_bytes = export_pdf(data_list, summary)
     b64 = base64.b64encode(pdf_bytes).decode('utf-8')
-    filename = f"Financial_Report_{report_period.replace(' ', '_')}_{user_id}.pdf"
-    return success({"filename": filename, "mime_type": "application/pdf", "data_base64": b64})
+    return success({"filename": f"Financial_Report_{user_id}.pdf", "mime_type": "application/pdf", "data_base64": b64})
 
 @router.get("/export/excel")
-def route_export_excel(user_id: int, month: int = None, year: int = None, db: Session = Depends(get_db)):
+def route_export_excel(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
-    income_query = db.query(models.Income).filter(models.Income.user_id == user_id)
-    expense_query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
-    
-    report_period = "Full History"
-    if month and year:
-        m_str = f"{year}-{month:02d}-"
-        income_query = income_query.filter(models.Income.date.like(f"{m_str}%"))
-        expense_query = expense_query.filter(models.Expense.date.like(f"{m_str}%"))
-        report_period = datetime(year, month, 1).strftime("%B %Y")
-        
-    incomes = income_query.all()
-    expenses = expense_query.all()
+    incomes = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
     
     summary = {
         "user_name": user.name if user else "User",
         "total_income": sum(i.amount for i in incomes),
-        "total_expense": sum(e.amount for e in expenses),
-        "period": report_period
+        "total_expense": sum(e.amount for e in expenses)
     }
     
     data_list = [
@@ -264,30 +245,18 @@ def route_export_excel(user_id: int, month: int = None, year: int = None, db: Se
     
     excel_bytes = export_excel(data_list, summary)
     b64 = base64.b64encode(excel_bytes).decode('utf-8')
-    filename = f"Financial_Report_{report_period.replace(' ', '_')}_{user_id}.xlsx"
-    return success({"filename": filename, "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "data_base64": b64})
+    return success({"filename": f"Financial_Report_{user_id}.xlsx", "mime_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "data_base64": b64})
 
 @router.get("/export/csv")
-def route_export_csv(user_id: int, month: int = None, year: int = None, db: Session = Depends(get_db)):
+def route_export_csv(user_id: int, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
-    income_query = db.query(models.Income).filter(models.Income.user_id == user_id)
-    expense_query = db.query(models.Expense).filter(models.Expense.user_id == user_id)
-    
-    report_period = "Full History"
-    if month and year:
-        m_str = f"{year}-{month:02d}-"
-        income_query = income_query.filter(models.Income.date.like(f"{m_str}%"))
-        expense_query = expense_query.filter(models.Expense.date.like(f"{m_str}%"))
-        report_period = datetime(year, month, 1).strftime("%B %Y")
-        
-    incomes = income_query.all()
-    expenses = expense_query.all()
+    incomes = db.query(models.Income).filter(models.Income.user_id == user_id).all()
+    expenses = db.query(models.Expense).filter(models.Expense.user_id == user_id).all()
     
     summary = {
         "user_name": user.name if user else "User",
         "total_income": sum(i.amount for i in incomes),
-        "total_expense": sum(e.amount for e in expenses),
-        "period": report_period
+        "total_expense": sum(e.amount for e in expenses)
     }
     
     data_list = [
@@ -299,5 +268,4 @@ def route_export_csv(user_id: int, month: int = None, year: int = None, db: Sess
     
     csv_str = export_csv(data_list, summary)
     b64 = base64.b64encode(csv_str.encode('utf-8')).decode('utf-8')
-    filename = f"Financial_Report_{report_period.replace(' ', '_')}_{user_id}.csv"
-    return success({"filename": filename, "mime_type": "text/csv", "data_base64": b64})
+    return success({"filename": f"Financial_Report_{user_id}.csv", "mime_type": "text/csv", "data_base64": b64})

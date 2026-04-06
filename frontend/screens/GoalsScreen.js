@@ -3,10 +3,13 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, M
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 
 export default function GoalsScreen() {
   const { userId } = useAuth();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [goals, setGoals] = useState([]);
   const [name, setName] = useState('');
   const [target, setTarget] = useState('');
@@ -77,7 +80,7 @@ export default function GoalsScreen() {
         <TextInput 
           style={styles.input} 
           placeholder="New Goal Target (e.g. Car)" 
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={theme.textSecondary}
           value={name} 
           onChangeText={setName} 
         />
@@ -85,7 +88,7 @@ export default function GoalsScreen() {
           <TextInput 
             style={[styles.input, { flex: 1, marginRight: 12, marginBottom: 0 }]} 
             placeholder="Target Amount (₹)" 
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={theme.textSecondary}
             value={target} 
             onChangeText={setTarget} 
             keyboardType="numeric" 
@@ -144,7 +147,7 @@ export default function GoalsScreen() {
               <TextInput 
                 style={styles.modalInput} 
                 placeholder="0" 
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={theme.textSecondary}
                 value={addAmount} 
                 onChangeText={setAddAmount} 
                 keyboardType="numeric" 
@@ -163,17 +166,19 @@ export default function GoalsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 20, backgroundColor: '#f9fafb' },
-  header: { fontSize: 26, fontWeight: '800', color: '#111827', marginTop: 20, marginBottom: 20 },
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, paddingHorizontal: 20, backgroundColor: theme.background },
+  header: { fontSize: 26, fontWeight: '800', color: theme.text, marginTop: 20, marginBottom: 20 },
   
   formCard: { 
-    backgroundColor: '#ffffff', padding: 20, borderRadius: 20, marginBottom: 24,
-    shadowColor: '#6366f1', shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 8 }, elevation: 4 
+    backgroundColor: theme.surface, padding: 20, borderRadius: 20, marginBottom: 24,
+    shadowColor: theme.cardShadow, shadowOpacity: 0.08, shadowRadius: 15, shadowOffset: { width: 0, height: 8 }, elevation: 4,
+    borderWidth: 1, borderColor: theme.border
   },
   input: { 
-    backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 50, 
-    borderRadius: 12, marginBottom: 12, fontSize: 16, fontWeight: '500' 
+    backgroundColor: theme.background, color: theme.text, paddingHorizontal: 16, height: 50, 
+    borderRadius: 12, marginBottom: 12, fontSize: 16, fontWeight: '500',
+    borderWidth: 1, borderColor: theme.border
   },
   row: { flexDirection: 'row', alignItems: 'center' },
   addButton: { 
@@ -182,26 +187,26 @@ const styles = StyleSheet.create({
   },
 
   goalCard: { 
-    backgroundColor: '#ffffff', padding: 20, borderRadius: 20, marginBottom: 16,
-    borderWidth: 1, borderColor: '#f3f4f6', shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2
+    backgroundColor: theme.surface, padding: 20, borderRadius: 20, marginBottom: 16,
+    borderWidth: 1, borderColor: theme.border, shadowColor: theme.cardShadow, shadowOpacity: 0.03, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 2
   },
   goalHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  goalTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
+  goalTitle: { fontSize: 18, fontWeight: '700', color: theme.text },
   headerRight: { flexDirection: 'row', alignItems: 'center' },
   goalPercentage: { fontSize: 16, fontWeight: '800', color: '#6366f1', marginRight: 8 },
   addMoneyBtnIcon: { padding: 4 },
-  goalSubtext: { fontSize: 14, color: '#6b7280', marginBottom: 16, fontWeight: '500' },
-  progressBar: { height: 10, backgroundColor: '#e5e7eb', borderRadius: 5, overflow: 'hidden' },
+  goalSubtext: { fontSize: 14, color: theme.textSecondary, marginBottom: 16, fontWeight: '500' },
+  progressBar: { height: 10, backgroundColor: theme.border, borderRadius: 5, overflow: 'hidden' },
   progressFill: { height: '100%', backgroundColor: '#6366f1', borderRadius: 5 },
 
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
-  modalContent: { backgroundColor: '#fff', borderRadius: 24, padding: 24, width: '100%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 10 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: theme.surface, borderRadius: 24, padding: 24, width: '100%', shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 10, borderWidth: 1, borderColor: theme.border },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  modalTitle: { fontSize: 22, fontWeight: '700', color: '#1f2937' },
-  modalSubtitle: { fontSize: 16, color: '#6b7280', marginBottom: 20 },
+  modalTitle: { fontSize: 22, fontWeight: '700', color: theme.text },
+  modalSubtitle: { fontSize: 16, color: theme.textSecondary, marginBottom: 20 },
   inputGroup: { marginBottom: 24 },
-  inputLabel: { fontSize: 14, color: '#4b5563', fontWeight: '600', marginBottom: 8 },
-  modalInput: { backgroundColor: '#f3f4f6', color: '#1f2937', paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500' },
+  inputLabel: { fontSize: 14, color: theme.text, fontWeight: '600', marginBottom: 8 },
+  modalInput: { backgroundColor: theme.background, color: theme.text, paddingHorizontal: 16, height: 54, borderRadius: 14, fontSize: 16, fontWeight: '500', borderWidth: 1, borderColor: theme.border },
   submitModalBtn: { backgroundColor: '#6366f1', paddingVertical: 16, borderRadius: 14, alignItems: 'center' },
   submitModalBtnText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
 });

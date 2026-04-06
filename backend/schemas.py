@@ -25,13 +25,12 @@ class UserBase(BaseModel):
     budget_rule_id: Optional[int] = None
 
 class UserCreate(UserBase):
-    password: Optional[str] = None
+    pass
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     mobile_number: Optional[str] = None
-    password: Optional[str] = None
     monthly_income: Optional[float] = None
     budget_rule_id: Optional[int] = None
 

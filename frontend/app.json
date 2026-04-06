@@ -11,9 +11,7 @@
     "ios": {
       "supportsTablet": true
     },
-    "android": {
-      "package": "com.anonymous.financetracker"
-    },
+    "android": {},
     "web": {}
   }
 }

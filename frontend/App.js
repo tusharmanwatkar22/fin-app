@@ -6,15 +6,21 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { CategoryProvider } from './context/CategoryContext';
 
 import DashboardScreen from './screens/DashboardScreen';
 import TransactionsScreen from './screens/TransactionsScreen';
 import BudgetScreen from './screens/BudgetScreen';
+import BudgetTransactionsScreen from './screens/BudgetTransactionsScreen';
 import AnalyticsScreen from './screens/AnalyticsScreen';
-import GoalsScreen from './screens/GoalsScreen';
 import ReportsScreen from './screens/ReportsScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AddTransactionScreen from './screens/AddTransactionScreen';
+import ManageCategoriesScreen from './screens/ManageCategoriesScreen';
+import SecuritySyncScreen from './screens/SecuritySyncScreen';
+import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
+import HelpSupportScreen from './screens/HelpSupportScreen';
 
 import WelcomeScreen from './screens/WelcomeScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -25,14 +31,18 @@ const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
 
 function MainTabs() {
+  const { theme } = useTheme();
+
   return (
     <Tab.Navigator 
       screenOptions={({ route }) => ({ 
         headerShown: false, 
-        tabBarActiveTintColor: '#28a745', 
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: theme.primary, 
+        tabBarInactiveTintColor: theme.textSecondary,
         tabBarShowLabel: route.name !== 'Transactions',
         tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
           height: Platform.OS === 'ios' ? 85 : 65,
           paddingBottom: Platform.OS === 'ios' ? 25 : 10,
         },
@@ -44,10 +54,10 @@ function MainTabs() {
                 width: 60,
                 height: 60,
                 borderRadius: 30,
-                backgroundColor: '#28a745',
+                backgroundColor: theme.primary,
                 justifyContent: 'center',
                 alignItems: 'center',
-                shadowColor: '#28a745',
+                shadowColor: theme.primary,
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: 0.3,
                 shadowRadius: 4,
@@ -62,7 +72,7 @@ function MainTabs() {
           if (route.name === 'Dashboard') iconName = focused ? 'home' : 'home-outline';
           else if (route.name === 'Budget') iconName = focused ? 'pie-chart' : 'pie-chart-outline';
           else if (route.name === 'Analytics') iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-          else if (route.name === 'Goals') iconName = focused ? 'flag' : 'flag-outline';
+          else if (route.name === 'Reports') iconName = focused ? 'document-text' : 'document-text-outline';
           
           return <Ionicons name={iconName} size={size} color={color} />;
         }
@@ -72,7 +82,7 @@ function MainTabs() {
       <Tab.Screen name="Budget" component={BudgetScreen} />
       <Tab.Screen name="Transactions" component={TransactionsScreen} options={{ tabBarLabel: '' }} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-      <Tab.Screen name="Goals" component={GoalsScreen} />
+      <Tab.Screen name="Reports" component={ReportsScreen} />
     </Tab.Navigator>
   );
 }
@@ -96,8 +106,12 @@ function RootNavigator() {
           <>
             <Stack.Screen name="MainTabs" component={MainTabs} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
-            <Stack.Screen name="Reports" component={ReportsScreen} />
+            <Stack.Screen name="BudgetTransactions" component={BudgetTransactionsScreen} options={{ headerShown: false }} />
             <Stack.Screen name="AddTransactionScreen" component={AddTransactionScreen} options={{ presentation: 'modal' }} />
+            <Stack.Screen name="ManageCategories" component={ManageCategoriesScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="SecuritySync" component={SecuritySyncScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="HelpSupport" component={HelpSupportScreen} options={{ headerShown: false }} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
@@ -109,10 +123,14 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <SafeAreaProvider>
-        <RootNavigator />
-      </SafeAreaProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <CategoryProvider>
+          <SafeAreaProvider>
+            <RootNavigator />
+          </SafeAreaProvider>
+        </CategoryProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

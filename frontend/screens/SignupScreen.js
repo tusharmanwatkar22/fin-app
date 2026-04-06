@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 
 export default function SignupScreen() {
@@ -10,38 +11,37 @@ export default function SignupScreen() {
   const [email, setEmail] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
+  const [isCrescon, setIsCrescon] = useState(true);
   const navigation = useNavigation();
   const { login, setUserProfile } = useAuth();
-  const [loading, setLoading] = useState(false);
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
+  const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const handleSignup = async () => {
-    if (name && email && mobileNumber && password) {
-      setLoading(true);
+    if (name && email && mobileNumber) {
       try {
-        const payload = {
+        const res = await api.post('/profile/create', {
           name: name,
           email: email,
-          mobile_number: mobileNumber,
-          password: password
-        };
-        await api.put('/profile/update?user_id=1', payload);
-        console.log("✅ Profile saved to backend");
+          mobile_number: mobileNumber
+        });
         
-        // Ensure context has the most up-to-date local info too
-        const newProfile = { ...payload };
-        setUserProfile(newProfile);
-        login(1, newProfile);
+        if (res.data && res.data.success) {
+          const newUserId = res.data.data.user_id;
+          const newProfile = { name, email, mobile_number: mobileNumber };
+          setUserProfile(newProfile);
+          login(newUserId, newProfile);
+        } else {
+          alert("Error creating account: " + (res.data?.data?.error || "Unknown error"));
+        }
       } catch (e) {
-        console.log("⚠️ Error during signup sync", e);
-        Alert.alert("Sync Issue", "Could not save to Cloud. Signing in locally instead.");
-        // We still log in locally so they are not blocked, but they know it didn't sync
-        const localProfile = { name, email, mobile_number: mobileNumber };
-        login(1, localProfile);
-      } finally {
-        setLoading(false);
+        console.log("Error during signup", e);
+        alert("Failed to sign up. Please try again.");
       }
     } else {
-      Alert.alert("Missing Fields", "Please fill in all fields (Name, Email, Mobile and Password)");
+      alert("Please fill in Name, Email, and Mobile Number");
     }
   };
 
@@ -53,7 +53,7 @@ export default function SignupScreen() {
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={28} color="#333" />
+            <Ionicons name="chevron-back" size={28} color={theme.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Sign Up</Text>
           <View style={{ width: 28 }} />
@@ -65,7 +65,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="Your Name"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -78,7 +78,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="Email Address"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -92,7 +92,7 @@ export default function SignupScreen() {
             <TextInput
               style={styles.input}
               placeholder="Mobile Number"
-              placeholderTextColor="#999"
+              placeholderTextColor={theme.textSecondary}
               value={mobileNumber}
               onChangeText={setMobileNumber}
               keyboardType="phone-pad"
@@ -101,28 +101,28 @@ export default function SignupScreen() {
           </View>
 
           <Text style={styles.label}>Password</Text>
+          <View style={[styles.inputContainer, styles.passwordContainer]}>
+            <TouchableOpacity 
+              style={styles.checkboxContainer} 
+              onPress={() => setIsCrescon(!isCrescon)}
+            >
+              <View style={[styles.checkbox, isCrescon && styles.checkboxChecked]}>
+                {isCrescon && <Ionicons name="checkmark" size={14} color="#fff" />}
+              </View>
+              <Text style={styles.checkboxLabel}>Crescon</Text>
+            </TouchableOpacity>
+            
+            <Ionicons name="settings-outline" size={20} color="#999" />
+          </View>
+          
+          <Text style={styles.label}>Date</Text>
           <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="Your Password"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-            />
-            <Ionicons name="lock-closed" size={20} color="#999" style={styles.inputIcon} />
+            <Text style={styles.dateText}>{today}</Text>
+            <Ionicons name="calendar-outline" size={20} color="#999" style={styles.inputIcon} />
           </View>
 
-          <TouchableOpacity 
-            style={[styles.signupButton, loading && {opacity: 0.7}]} 
-            onPress={handleSignup}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.signupButtonText}>Sign Up</Text>
-            )}
+          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
+            <Text style={styles.signupButtonText}>Sign Up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -132,79 +132,29 @@ export default function SignupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8F9FE',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingTop: 50,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 30,
-  },
-  backButton: {
-    padding: 5,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-  },
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background },
+  scrollContainer: { flexGrow: 1, paddingTop: 50 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 30 },
+  backButton: { padding: 5 },
+  title: { fontSize: 22, fontWeight: 'bold', color: theme.text },
   formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    marginHorizontal: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    backgroundColor: theme.surface, borderRadius: 20, marginHorizontal: 20, padding: 20,
+    shadowColor: theme.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3, borderWidth: 1, borderColor: theme.border
   },
-  label: {
-    fontSize: 14,
-    color: '#555',
-    marginBottom: 8,
-    fontWeight: '600',
-  },
+  label: { fontSize: 14, color: theme.text, marginBottom: 8, fontWeight: '600' },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F9FAFC',
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 20,
-    height: 55,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: theme.background,
+    borderRadius: 12, paddingHorizontal: 15, borderWidth: 1, borderColor: theme.border, marginBottom: 20, height: 55
   },
-  input: {
-    flex: 1,
-    height: '100%',
-    color: '#333',
-    fontSize: 16,
-  },
-  inputIcon: {
-    marginLeft: 10,
-  },
-  signupButton: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  signupButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
+  passwordContainer: { justifyContent: 'space-between' },
+  checkboxContainer: { flexDirection: 'row', alignItems: 'center' },
+  checkbox: { width: 20, height: 20, borderRadius: 4, borderWidth: 1, borderColor: theme.primary, marginRight: 10, justifyContent: 'center', alignItems: 'center' },
+  checkboxChecked: { backgroundColor: theme.primary },
+  checkboxLabel: { fontSize: 16, color: theme.text },
+  input: { flex: 1, height: '100%', color: theme.text, fontSize: 16 },
+  inputIcon: { marginLeft: 10 },
+  dateText: { flex: 1, fontSize: 16, color: theme.text },
+  signupButton: { backgroundColor: theme.primary, borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 10, marginBottom: 20 },
+  signupButtonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
 });

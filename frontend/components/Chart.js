@@ -15,12 +15,13 @@ export const ExpensePieChart = ({ data }) => {
         <PieChart
           data={data}
           width={screenWidth}
-          height={200}
+          height={220}
           chartConfig={chartConfig}
           accessor={"amount"}
           backgroundColor={"transparent"}
-          paddingLeft={"15"}
-          absolute
+          paddingLeft={"0"}
+          center={[10, 0]}
+          hasLegend={true}
         />
       ) : (
         <Text style={styles.noData}>No expense data to chart</Text>

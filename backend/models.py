@@ -10,7 +10,6 @@ class User(Base):
     name = Column(String, index=True)
     email = Column(String, unique=True, index=True)
     mobile_number = Column(String, unique=True, index=True)
-    password = Column(String, nullable=True)
     monthly_income = Column(Float, default=0.0)
     budget_rule_id = Column(Integer, ForeignKey("budget_rules.rule_id"), nullable=True)
 

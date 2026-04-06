@@ -20,6 +20,8 @@ The application utilizes **React Native (Expo)** for the frontend and **Python F
    - Finalized the **Profile Screen** for user detail management.
    - Transformed the dummy **Dashboard**, **Budget**, and **Transactions** screens to dynamically fetch and display actual user finances through the backend API.
    - Enforced budget limits dynamically against current rules! Example: *Exceeding 30% of your income on 'Wants' will safely alert the user.*
+   - **Salary-Based Budget System:** Overhauled the **Budget Screen** to allow inputting a monthly salary independently (stored via `updateProfile` endpoint). The app dynamically distributes this salary into **Needs**, **Wants**, and **Savings**. 
+   - **Interactive Budget Details:** Budgets feature collapsible arrows indicating sub-transactions (equipped with Date logic). A **Time Filter (M/Y)** was incorporated to toggle checking expenses on a strictly Monthly or Yearly timeframe.
 
 3. **Advanced Features Integration:**
    - **QR Scanner:** Integrated `expo-camera` in the [ExpenseScreen](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/screens/ExpenseScreen.js#8-125) to quickly capture a UPI QR code string, which gets correctly parsed by our custom [scannerService.js](file:///c:/Users/vansh/.gemini/antigravity/scratch/finance_tracker/frontend/services/scannerService.js).

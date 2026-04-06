@@ -12,7 +12,7 @@ const getBackendUrl = () => {
   }
   
   // Fallback to the host machine's local IP address for physical devices and emulators
-  return 'http://10.76.9.23:8000';
+  return 'http://172.24.161.238:8000';
 };
 
 const API_BASE_URL = getBackendUrl();
@@ -52,6 +52,21 @@ export const getGoals = async (userId) => {
 
 export const addTransaction = async (userId, transactionData) => {
   const response = await api.post(`/transactions/add?user_id=${userId}`, transactionData);
+  return response.data;
+};
+
+export const getProfile = async (userId) => {
+  const response = await api.get(`/profile?user_id=${userId}`);
+  return response.data;
+};
+
+export const updateProfile = async (userId, updateData) => {
+  const response = await api.put(`/profile/update?user_id=${userId}`, updateData);
+  return response.data;
+};
+
+export const getExpenses = async (userId) => {
+  const response = await api.get(`/expense/list?user_id=${userId}`);
   return response.data;
 };
 

@@ -1,30 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import BudgetBar from '../components/BudgetBar';
 import Card from '../components/Card';
-import api from '../services/api';
+import api, { getProfile, updateProfile, getExpenses } from '../services/api';
+
+const NEEDS_CATEGORIES = ['Food', 'Rent', 'Groceries', 'Utilities', 'Transport', 'Healthcare', 'Education', 'Insurance'];
+const SAVINGS_CATEGORIES = ['Investment', 'Savings', 'Emergency Fund'];
 
 const BudgetScreen = ({ navigation }) => {
   const { userId } = useAuth();
-  const [data, setData] = useState({ income: 0, expenses: 0, rule: null });
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const [data, setData] = useState({ rule: null });
   const [rules, setRules] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [networkError, setNetworkError] = useState(false);
 
+  const [salary, setSalary] = useState(0);
+  const [isEditingSalary, setIsEditingSalary] = useState(false);
+  const [tempSalary, setTempSalary] = useState('');
+
+  const [allExpenses, setAllExpenses] = useState([]);
+
+  const [needsTxns, setNeedsTxns] = useState([]);
+  const [wantsTxns, setWantsTxns] = useState([]);
+  const [savingsTxns, setSavingsTxns] = useState([]);
+  
+  const [needsSpent, setNeedsSpent] = useState(0);
+  const [wantsSpent, setWantsSpent] = useState(0);
+  const [savingsSpent, setSavingsSpent] = useState(0);
+
   const fetchBudget = async () => {
     if (!userId) return;
     try {
+      // Fetch Profile
+      const profileRes = await getProfile(userId);
+      let userSalary = 0;
+      if (profileRes && profileRes.success) {
+        userSalary = profileRes.data.monthly_income || 0;
+        setSalary(userSalary);
+        setTempSalary(userSalary.toString());
+      }
+
+      // Fetch Summary and Rules
       const summaryRes = await api.get(`/summary?user_id=${userId}`);
-      
       let activeRule = { needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" };
-      let d = { total_income: 0, total_expense: 0 };
 
       if (summaryRes.data && summaryRes.data.success) {
-        d = summaryRes.data.data;
+        const d = summaryRes.data.data;
         const ruleId = d.budget_rule_id;
-        
         try {
           const rulesRes = await api.get('/budget-rules');
           if (rulesRes.data && rulesRes.data.success) {
@@ -37,16 +64,21 @@ const BudgetScreen = ({ navigation }) => {
         }
       }
 
+      // Fetch Expenses
+      const expensesRes = await getExpenses(userId);
+      if (expensesRes && expensesRes.success) {
+        setAllExpenses(expensesRes.data || []);
+      }
+
+      setData({ rule: activeRule });
       setNetworkError(false);
-      setData({ income: d.total_income || 0, expenses: d.total_expense || 0, rule: activeRule });
+
     } catch (e) {
       console.log('Budget fetch error', e);
       setNetworkError(true);
-      setData({ income: 0, expenses: 0, rule: { rule_id: 1, needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" } });
+      setData({ rule: { rule_id: 1, needs_percentage: 50, wants_percentage: 30, savings_percentage: 20, rule_name: "50-30-20" } });
       setRules([
         { rule_id: 1, rule_name: "50-30-20", needs_percentage: 50, wants_percentage: 30, savings_percentage: 20 },
-        { rule_id: 2, rule_name: "70-20-10", needs_percentage: 70, wants_percentage: 20, savings_percentage: 10 },
-        { rule_id: 3, rule_name: "80-20-0", needs_percentage: 80, wants_percentage: 20, savings_percentage: 0 }
       ]);
     }
   };
@@ -62,6 +94,48 @@ const BudgetScreen = ({ navigation }) => {
     fetchBudget();
     return unsubscribe;
   }, [navigation, userId]);
+
+  // Handle Filtering
+  useEffect(() => {
+    const nTxns = [];
+    const wTxns = [];
+    const sTxns = [];
+    let nSpent = 0;
+    let wSpent = 0;
+    let sSpent = 0;
+
+    const now = new Date();
+
+    allExpenses.forEach(exp => {
+      const expDate = new Date(exp.date);
+      let include = false;
+
+      // Default to Monthly filtering for Budget
+      if (expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear()) {
+        include = true;
+      }
+
+      if (include) {
+        if (NEEDS_CATEGORIES.includes(exp.category)) {
+          nTxns.push(exp);
+          nSpent += exp.amount;
+        } else if (SAVINGS_CATEGORIES.includes(exp.category)) {
+          sTxns.push(exp);
+          sSpent += exp.amount;
+        } else {
+          wTxns.push(exp);
+          wSpent += exp.amount;
+        }
+      }
+    });
+
+    setNeedsTxns(nTxns);
+    setWantsTxns(wTxns);
+    setSavingsTxns(sTxns);
+    setNeedsSpent(nSpent);
+    setWantsSpent(wSpent);
+    setSavingsSpent(sSpent);
+  }, [allExpenses]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -80,6 +154,55 @@ const BudgetScreen = ({ navigation }) => {
     }
   };
 
+  const handleSaveSalary = async () => {
+    try {
+      const newSalary = parseFloat(tempSalary) || 0;
+      setIsEditingSalary(false);
+      setSalary(newSalary);
+      await updateProfile(userId, { monthly_income: newSalary });
+      fetchBudget(); // refresh logic if needed
+    } catch(e) {
+      console.log('Update salary error', e);
+    }
+  };
+
+  const navigateToTransactions = (type) => {
+    let txns = [];
+    let limit = 0;
+    let spent = 0;
+    let title = '';
+
+    if (type === 'Needs') {
+      txns = needsTxns;
+      limit = (salary * (data.rule.needs_percentage || 50)) / 100;
+      spent = needsSpent;
+      title = `Needs (${data.rule.needs_percentage}%)`;
+    } else if (type === 'Wants') {
+      txns = wantsTxns;
+      limit = (salary * (data.rule.wants_percentage || 30)) / 100;
+      spent = wantsSpent;
+      title = `Wants (${data.rule.wants_percentage}%)`;
+    } else {
+      txns = savingsTxns;
+      limit = (salary * (data.rule.savings_percentage || 20)) / 100;
+      spent = savingsSpent;
+      title = `Savings (${data.rule.savings_percentage}%)`;
+    }
+
+    navigation.navigate('BudgetTransactions', {
+      category: title,
+      type: type,
+      transactions: txns,
+      spent: spent,
+      limit: limit,
+    });
+  };
+
+  const formatDate = (dateString) => {
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   if (!data || !data.rule) {
     return (
       <View style={styles.container}>
@@ -88,15 +211,10 @@ const BudgetScreen = ({ navigation }) => {
     );
   }
 
-  const inc = data.income || 0;
-  const needsLimit = (inc * (data.rule.needs_percentage || 50)) / 100;
-  const wantsLimit = (inc * (data.rule.wants_percentage || 30)) / 100;
-  const savingsLimit = (inc * (data.rule.savings_percentage || 20)) / 100;
+  const needsLimit = (salary * (data.rule.needs_percentage || 50)) / 100;
+  const wantsLimit = (salary * (data.rule.wants_percentage || 30)) / 100;
+  const savingsLimit = (salary * (data.rule.savings_percentage || 20)) / 100;
 
-  const needsSpent = data.expenses * 0.6; // Mock distribution
-  const wantsSpent = data.expenses * 0.4; // Mock distribution
-  const savingsSpent = Math.max(0, inc - data.expenses);
-  
   const wantsExceeded = wantsSpent > wantsLimit;
   const needsExceeded = needsSpent > needsLimit;
 
@@ -115,15 +233,76 @@ const BudgetScreen = ({ navigation }) => {
         </View>
       )}
 
-      <View style={[styles.ruleBadge, networkError ? { marginTop: 16 } : null]}>
-        <Ionicons name="shield-checkmark" size={18} color="#4f46e5" style={{marginRight: 6}} />
-        <Text style={styles.subtitle}>Active Rule: <Text style={{fontWeight: '800'}}>{data.rule.rule_name}</Text></Text>
+      {/* SALARY SECTION */}
+      <View style={styles.salarySection}>
+        <Text style={styles.salaryLabel}>Monthly Salary Setup</Text>
+        <View style={styles.salaryRow}>
+           <Text style={styles.salaryCurrency}>₹</Text>
+           {isEditingSalary ? (
+             <TextInput 
+               style={styles.salaryInput} 
+               value={tempSalary} 
+               onChangeText={setTempSalary} 
+               keyboardType="numeric"
+               autoFocus
+             />
+           ) : (
+             <Text style={styles.salaryDisplay}>{salary.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+           )}
+           {isEditingSalary ? (
+             <TouchableOpacity style={styles.salaryBtn} onPress={handleSaveSalary}>
+               <Text style={styles.salaryBtnText}>Save</Text>
+             </TouchableOpacity>
+           ) : (
+             <TouchableOpacity style={styles.salaryBtnOutline} onPress={() => setIsEditingSalary(true)}>
+               <Text style={styles.salaryBtnOutlineText}>Edit</Text>
+             </TouchableOpacity>
+           )}
+        </View>
+        <Text style={styles.salarySubtext}>This amount is distributed according to your active rule.</Text>
       </View>
 
-      <Card style={{ paddingVertical: 24 }}>
-        <BudgetBar category={`Needs (${data.rule.needs_percentage}%)`} spent={needsSpent} limit={needsLimit} color="#3b82f6" />
-        <BudgetBar category={`Wants (${data.rule.wants_percentage}%)`} spent={wantsSpent} limit={wantsLimit} color="#f59e0b" />
-        <BudgetBar category={`Savings (${data.rule.savings_percentage}%)`} spent={savingsSpent} limit={savingsLimit} color="#10b981" />
+      <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', marginBottom: 20 }}>
+        <View style={[styles.ruleBadge, { marginBottom: 0 }]}>
+          <Ionicons name="shield-checkmark" size={18} color="#4f46e5" style={{marginRight: 6}} />
+          <Text style={styles.subtitle}>Active Rule: <Text style={{fontWeight: '800'}}>{data.rule.rule_name}</Text></Text>
+        </View>
+      </View>
+
+      <Card style={{ paddingVertical: 24, paddingHorizontal: 16 }}>
+        <BudgetBar 
+          category={`Needs (${data.rule.needs_percentage}%)`} 
+          spent={needsSpent} 
+          limit={needsLimit} 
+          color="#3b82f6" 
+          showArrow={true}
+          expanded={false}
+          onPress={() => navigateToTransactions('Needs')}
+        />
+        
+        <View style={styles.divider} />
+
+        <BudgetBar 
+          category={`Wants (${data.rule.wants_percentage}%)`} 
+          spent={wantsSpent} 
+          limit={wantsLimit} 
+          color="#f59e0b" 
+          showArrow={true}
+          expanded={false}
+          onPress={() => navigateToTransactions('Wants')}
+        />
+        
+        <View style={styles.divider} />
+
+        <BudgetBar 
+          category={`Savings (${data.rule.savings_percentage}%)`} 
+          spent={savingsSpent} 
+          limit={savingsLimit} 
+          color="#10b981" 
+          showArrow={true}
+          expanded={false}
+          onPress={() => navigateToTransactions('Savings')}
+        />
       </Card>
 
       {wantsExceeded && (
@@ -167,20 +346,42 @@ const BudgetScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb', paddingHorizontal: 20 },
-  header: { fontSize: 26, fontWeight: '800', color: '#111827', marginTop: 60, marginBottom: 8 },
-  ruleBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e0e7ff', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
-  subtitle: { fontSize: 14, color: '#4338ca', fontWeight: '600' },
-  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fef2f2', padding: 16, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: '#fecaca' },
-  warning: { color: '#b91c1c', fontSize: 14, fontWeight: '700', flex: 1 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 30, marginBottom: 12 },
-  ruleCard: { backgroundColor: '#ffffff', padding: 16, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: '#e5e7eb', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
-  activeRuleCard: { borderColor: '#4f46e5', backgroundColor: '#e0e7ff', borderWidth: 2 },
-  ruleCardTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937', marginBottom: 4 },
-  activeRuleCardTitle: { color: '#4338ca' },
-  ruleCardDesc: { fontSize: 14, color: '#6b7280', fontWeight: '500' },
-  activeRuleCardDesc: { color: '#4f46e5' }
+const getStyles = (theme) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.background, paddingHorizontal: 20 },
+  header: { fontSize: 26, fontWeight: '800', color: theme.text, marginTop: 60, marginBottom: 8 },
+  ruleBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.primary + '20', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, marginBottom: 20 },
+  subtitle: { fontSize: 14, color: theme.primary, fontWeight: '600' },
+  warningBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.danger + '20', padding: 16, borderRadius: 12, marginTop: 12, borderWidth: 1, borderColor: theme.danger + '50' },
+  warning: { color: theme.danger, fontSize: 14, fontWeight: '700', flex: 1 },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: theme.text, marginTop: 30, marginBottom: 12 },
+  ruleCard: { backgroundColor: theme.surface, padding: 16, borderRadius: 16, marginBottom: 16, borderWidth: 1, borderColor: theme.border, elevation: 2, shadowColor: theme.cardShadow, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
+  activeRuleCard: { borderColor: theme.primary, backgroundColor: theme.primary + '10', borderWidth: 2 },
+  ruleCardTitle: { fontSize: 18, fontWeight: '700', color: theme.text, marginBottom: 4 },
+  activeRuleCardTitle: { color: theme.primary },
+  ruleCardDesc: { fontSize: 14, color: theme.textSecondary, fontWeight: '500' },
+  activeRuleCardDesc: { color: theme.primary },
+  // Salary Section Styles
+  salarySection: { backgroundColor: theme.surface, padding: 20, borderRadius: 16, marginBottom: 20, borderWidth: 1, borderColor: theme.border, elevation: 2, shadowColor: theme.cardShadow, shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }},
+  salaryLabel: { fontSize: 16, fontWeight: '600', color: theme.textSecondary, marginBottom: 12 },
+  salaryRow: { flexDirection: 'row', alignItems: 'center' },
+  salaryCurrency: { fontSize: 28, fontWeight: '800', color: theme.text, marginRight: 8 },
+  salaryDisplay: { fontSize: 32, fontWeight: '800', color: theme.text, flex: 1 },
+  salaryInput: { flex: 1, fontSize: 24, fontWeight: '700', color: theme.text, borderBottomWidth: 2, borderBottomColor: theme.primary, paddingVertical: 4, marginRight: 16 },
+  salaryBtn: { backgroundColor: theme.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
+  salaryBtnText: { color: '#ffffff', fontWeight: '700', fontSize: 16 },
+  salaryBtnOutline: { backgroundColor: theme.background, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
+  salaryBtnOutlineText: { color: theme.text, fontWeight: '700', fontSize: 16 },
+  salarySubtext: { fontSize: 13, color: theme.textSecondary, marginTop: 12 },
+
+  // Transaction List Styles
+  txnContainer: { marginTop: -10, marginBottom: 16, paddingHorizontal: 4, backgroundColor: theme.background, borderRadius: 8, padding: 8 },
+  txnRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 6, paddingVertical: 8, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+  txnDot: { width: 8, height: 8, borderRadius: 4, marginRight: 12 },
+  txnCategory: { fontSize: 15, fontWeight: '600', color: theme.textSecondary },
+  txnDate: { fontSize: 12, color: theme.textSecondary, marginTop: 2 },
+  txnAmount: { fontSize: 15, fontWeight: '700', color: theme.text },
+  emptyText: { fontSize: 13, color: theme.textSecondary, fontStyle: 'italic', marginVertical: 10, textAlign: 'center' },
+  divider: { height: 1, backgroundColor: theme.border, marginVertical: 8 }
 });
 
 export default BudgetScreen;

@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, Dimensions, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, Dimensions, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import api from '../services/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LineChart, PieChart } from 'react-native-chart-kit';
 
 const { width } = Dimensions.get('window');
 
-// LIGHT THEME COLORS
-const COLORS = {
-  bgMain: '#f4f6f9',     // Cool light gray background
-  bgCard: '#ffffff',     // White cards
-  textWhite: '#1f2937',  // Dark slate for main text (reused name so we don't change 50 styles)
-  textMuted: '#6b7280',  // Gray for secondary text
-  accentGreen: '#10b981',
-  accentRed: '#f43f5e',
-  themeInvert: '#0f172a', // Previously white, now very dark
-};
-
 export default function AnalyticsScreen({ navigation }) {
   const { userId } = useAuth();
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  
+  const COLORS = {
+    bgMain: theme.background,
+    bgCard: theme.surface,
+    textWhite: theme.text,
+    textMuted: theme.textSecondary,
+    accentGreen: theme.success,
+    accentRed: theme.danger,
+    themeInvert: theme.text === '#1f2937' ? '#0f172a' : '#ffffff',
+  };
+  const styles = getStyles(COLORS, theme);
   
   const [data, setData] = useState({ 
     income: 0, 
@@ -180,12 +182,12 @@ export default function AnalyticsScreen({ navigation }) {
   const topCategories = data.topCategories;
   const getCatIcon = (name) => {
     const ln = name.toLowerCase();
-    if(ln.includes('insur')) return { icon: 'shield-checkmark', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.15)' };
-    if(ln.includes('bill') || ln.includes('util')) return { icon: 'bulb', color: '#eab308', bg: 'rgba(250, 204, 21, 0.15)' };
-    if(ln.includes('hous')) return { icon: 'home', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.15)' };
-    if(ln.includes('edu')) return { icon: 'book', color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.15)' };
-    if(ln.includes('food') || ln.includes('din')) return { icon: 'fast-food', color: '#f97316', bg: 'rgba(249, 115, 22, 0.15)' };
-    return { icon: 'pricetag', color: '#10b981', bg: 'rgba(16, 185, 129, 0.15)' };
+    if(ln.includes('insur')) return { icon: 'shield-checkmark', color: '#3b82f6', bg: theme.primary + '15' };
+    if(ln.includes('bill') || ln.includes('util')) return { icon: 'bulb', color: '#eab308', bg: '#eab30815' };
+    if(ln.includes('hous')) return { icon: 'home', color: theme.danger, bg: theme.danger + '15' };
+    if(ln.includes('edu')) return { icon: 'book', color: '#0ea5e9', bg: '#0ea5e915' };
+    if(ln.includes('food') || ln.includes('din')) return { icon: 'fast-food', color: '#f97316', bg: '#f9731615' };
+    return { icon: 'pricetag', color: theme.success, bg: theme.success + '15' };
   };
 
   return (
@@ -196,23 +198,8 @@ export default function AnalyticsScreen({ navigation }) {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.textWhite} />}
       >
         {/* HEADER */}
-        <View style={styles.headerContainer}>
-          <View>
-            <Text style={styles.header}>Analytics</Text>
-            <Text style={styles.subtitle}>Your spending insights</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.headerReportBtn} 
-            onPress={() => navigation.navigate('Reports', { 
-              month: currentDate.getMonth() + 1, 
-              year: currentDate.getFullYear(),
-              periodName: getDateDisplay()
-            })}
-          >
-            <Ionicons name="document-text" size={20} color={COLORS.accentGreen} />
-            <Text style={styles.headerReportBtnText}>Reports</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.header}>Analytics</Text>
+        <Text style={styles.subtitle}>Your spending insights</Text>
 
         {/* TIME TOGGLE */}
         <View style={styles.segmentContainer}>
@@ -237,7 +224,7 @@ export default function AnalyticsScreen({ navigation }) {
             <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
           </TouchableOpacity>
         </View>
-        
+
         {/* 4 CARDS GRID */}
         <View style={styles.gridRow}>
           <View style={styles.gridCard}>
@@ -405,54 +392,51 @@ export default function AnalyticsScreen({ navigation }) {
             })}
           </View>
         </View>
+
       </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (COLORS, theme) => StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.bgMain },
   header: { fontSize: 32, fontWeight: '800', color: COLORS.textWhite, marginBottom: 4 },
   subtitle: { fontSize: 16, color: COLORS.textMuted, marginBottom: 20 },
   
-  headerContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  headerReportBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, gap: 6 },
-  headerReportBtnText: { color: COLORS.accentGreen, fontWeight: '700', fontSize: 14 },
-  
-  segmentContainer: { flexDirection: 'row', backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 4, marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1 },
+  segmentContainer: { flexDirection: 'row', backgroundColor: COLORS.bgCard, borderRadius: 12, padding: 4, marginBottom: 20, shadowColor: theme.cardShadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 6, elevation: 1, borderWidth: 1, borderColor: theme.border },
   segmentBtn: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
   segmentActive: { backgroundColor: COLORS.accentGreen },
   segmentTextInactive: { color: COLORS.accentGreen, fontWeight: '600', fontSize: 15 },
-  segmentTextActive: { color: '#ffffff', fontWeight: '700', fontSize: 15 }, // Keep explicitly white for contrast against green
+  segmentTextActive: { color: '#ffffff', fontWeight: '700', fontSize: 15 },
 
   yearNav: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 24, gap: 16 },
-  yearText: { color: COLORS.textWhite, fontSize: 16, fontWeight: '700' }, // More prominent dark color
+  yearText: { color: COLORS.textWhite, fontSize: 16, fontWeight: '700' },
 
   gridRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16, gap: 16 },
-  gridCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  gridCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, alignItems: 'center', shadowColor: theme.cardShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: theme.border },
   gridIcon: { marginBottom: 12 },
   gridAmount: { fontSize: 24, fontWeight: '800', color: COLORS.textWhite, marginBottom: 4 },
   gridLabel: { fontSize: 13, color: COLORS.textMuted, fontWeight: '500' },
 
-  cardBlock: { backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, marginBottom: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  cardBlock: { backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, marginBottom: 24, shadowColor: theme.cardShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: theme.border },
   cardHeader: { fontSize: 18, color: COLORS.textWhite, fontWeight: '700', marginBottom: 16 },
 
   barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   barLabel: { width: 60, color: COLORS.textWhite, fontSize: 14, fontWeight: '600' },
-  barTrack: { flex: 1, height: 12, backgroundColor: '#f1f5f9', borderRadius: 6, marginHorizontal: 12, overflow: 'hidden' }, // Light track
+  barTrack: { flex: 1, height: 12, backgroundColor: theme.border, borderRadius: 6, marginHorizontal: 12, overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: 6 },
   barAmount: { width: 100, textAlign: 'right', fontSize: 13, fontWeight: '700' },
 
-  netRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f1f5f9' },
+  netRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.border },
   netAmount: { fontSize: 16, fontWeight: '800', color: COLORS.accentGreen },
 
   sectionTitle: { fontSize: 20, color: COLORS.textWhite, fontWeight: '700', marginBottom: 6 },
   sectionSubtitle: { fontSize: 14, color: COLORS.textMuted, marginBottom: 16 },
 
-  insightIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(244, 63, 94, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
+  insightIconBox: { width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.accentRed + '15', justifyContent: 'center', alignItems: 'center', marginRight: 16 },
   insightText: { flex: 1, color: COLORS.textWhite, fontSize: 14, fontWeight: '600', lineHeight: 20 },
 
-  catCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  catCard: { flex: 1, backgroundColor: COLORS.bgCard, borderRadius: 16, padding: 20, alignItems: 'center', shadowColor: theme.cardShadow, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2, borderWidth: 1, borderColor: theme.border },
   catIconWrap: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
   catTitle: { fontSize: 15, color: COLORS.textWhite, fontWeight: '700', marginBottom: 6, textAlign: 'center' },
   catAmount: { fontSize: 15, color: COLORS.accentGreen, fontWeight: '700' },
@@ -461,5 +445,5 @@ const styles = StyleSheet.create({
   legendRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingVertical: 4 },
   legendDot: { width: 12, height: 12, borderRadius: 6, marginRight: 14 },
   legendName: { color: COLORS.textWhite, fontSize: 15, fontWeight: '600' },
-  legendValue: { color: COLORS.textWhite, fontSize: 15, fontWeight: '800' },
+  legendValue: { color: COLORS.textWhite, fontSize: 15, fontWeight: '800' }
 });
