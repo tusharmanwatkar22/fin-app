@@ -1,0 +1,100 @@
+# ==============================
+# GENERAL
+# ==============================
+.DS_Store
+Thumbs.db
+*.log
+
+# ==============================
+# NODE / REACT NATIVE
+# ==============================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+
+# React Native
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+
+# iOS (if present)
+ios/Pods/
+ios/build/
+
+# Metro bundler cache
+.metro-cache/
+
+# ==============================
+# ENV FILES
+# ==============================
+.env
+.env.*
+*.env
+
+# ==============================
+# PYTHON BACKEND
+# ==============================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Python build files
+build/
+dist/
+*.egg-info/
+
+# ==============================
+# DATABASE FILES
+# ==============================
+*.db
+*.sqlite3
+
+# ==============================
+# CACHE & TEMP FILES
+# ==============================
+.cache/
+tmp/
+temp/
+
+# ==============================
+# IDE / EDITOR
+# ==============================
+.vscode/
+.idea/
+
+# ==============================
+# FASTAPI / SERVER
+# ==============================
+*.pid
+*.sock
+
+# ==============================
+# TEST COVERAGE
+# ==============================
+coverage/
+htmlcov/
+
+# ==============================
+# ANDROID (EXTRA SAFETY)
+# ==============================
+*.keystore
+*.jks
+
+# ==============================
+# MISC
+# ==============================
+*.bak
+*.swp
